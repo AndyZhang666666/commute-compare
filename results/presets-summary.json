@@ -1,0 +1,391 @@
+{
+  "generatedAt": "2026-09-14",
+  "seed": 20260914,
+  "months": 5000,
+  "settings": {
+    "workStart": "09:30",
+    "daysPerMonth": 22,
+    "lateTolerance": 0.05
+  },
+  "note": "所有预设三点估计均为经验估计，非实测。",
+  "presets": [
+    {
+      "id": "hangzhou",
+      "city": "杭州",
+      "route": "金沙湖 → 西湖区",
+      "champions": {
+        "fastest": "打车",
+        "steadiest": "地铁 + 共享单车",
+        "cheapest": "地铁 1 号线"
+      },
+      "championSummary": "最省时间是「打车」（月中位 29.1 小时）；最稳是「地铁 + 共享单车」（P10–P90 只差 11 分钟）；最便宜是「地铁 1 号线」（月 ¥264）。三个冠军不是同一个 —— 这就是需要看分布而不是看均值的原因。",
+      "departureInsight": "要把迟到概率压到 5% 以下，「地铁 + 共享单车」需 08:36 出门，「打车」需 08:37 出门——「打车」均值快 7 分钟，出门时间也能晚 1 分钟，代价是每月多花 ¥1,650。",
+      "options": [
+        {
+          "name": "地铁 1 号线",
+          "input": {
+            "min": 42,
+            "mode": 48,
+            "max": 65,
+            "cost": 6
+          },
+          "dailyMean": 49.83,
+          "dailyP10": 44.71,
+          "dailyP50": 49.4,
+          "dailyP90": 55.6,
+          "spreadMinutes": 10.89,
+          "monthlyHoursP10": 35.97,
+          "monthlyHoursP50": 36.54,
+          "monthlyHoursP90": 37.13,
+          "monthlyCost": 264,
+          "suggestedDeparture": "08:32",
+          "lateProbAtSuggestedPct": 3.53,
+          "isFastest": false,
+          "isSteadiest": false,
+          "isCheapest": true
+        },
+        {
+          "name": "地铁 + 共享单车",
+          "input": {
+            "min": 38,
+            "mode": 45,
+            "max": 60,
+            "cost": 7.5
+          },
+          "dailyMean": 46.32,
+          "dailyP10": 41.17,
+          "dailyP50": 46,
+          "dailyP90": 51.93,
+          "spreadMinutes": 10.76,
+          "monthlyHoursP10": 33.39,
+          "monthlyHoursP50": 33.97,
+          "monthlyHoursP90": 34.54,
+          "monthlyCost": 330,
+          "suggestedDeparture": "08:36",
+          "lateProbAtSuggestedPct": 3.79,
+          "isFastest": false,
+          "isSteadiest": true,
+          "isCheapest": false
+        },
+        {
+          "name": "打车",
+          "input": {
+            "min": 28,
+            "mode": 35,
+            "max": 70,
+            "cost": 45
+          },
+          "dailyMean": 39.65,
+          "dailyP10": 31.19,
+          "dailyP50": 38.56,
+          "dailyP90": 49.75,
+          "spreadMinutes": 18.56,
+          "monthlyHoursP10": 28.08,
+          "monthlyHoursP50": 29.07,
+          "monthlyHoursP90": 30.1,
+          "monthlyCost": 1980,
+          "suggestedDeparture": "08:37",
+          "lateProbAtSuggestedPct": 4.99,
+          "isFastest": true,
+          "isSteadiest": false,
+          "isCheapest": false
+        },
+        {
+          "name": "自驾（含停车）",
+          "input": {
+            "min": 30,
+            "mode": 40,
+            "max": 80,
+            "cost": 38
+          },
+          "dailyMean": 44.97,
+          "dailyP10": 34.47,
+          "dailyP50": 43.81,
+          "dailyP90": 57.23,
+          "spreadMinutes": 22.76,
+          "monthlyHoursP10": 31.75,
+          "monthlyHoursP50": 32.95,
+          "monthlyHoursP90": 34.25,
+          "monthlyCost": 1672,
+          "suggestedDeparture": "08:29",
+          "lateProbAtSuggestedPct": 4.97,
+          "isFastest": false,
+          "isSteadiest": false,
+          "isCheapest": false
+        }
+      ]
+    },
+    {
+      "id": "beijing",
+      "city": "北京",
+      "route": "回龙观 → 中关村",
+      "champions": {
+        "fastest": "打车",
+        "steadiest": "地铁 13 号线",
+        "cheapest": "公交"
+      },
+      "championSummary": "最省时间是「打车」（月中位 37.3 小时）；最稳是「地铁 13 号线」（P10–P90 只差 17 分钟）；最便宜是「公交」（月 ¥88）。三个冠军不是同一个 —— 这就是需要看分布而不是看均值的原因。",
+      "departureInsight": "要把迟到概率压到 5% 以下，「地铁 13 号线」需 08:26 出门，「打车」需 08:18 出门——「打车」均值快 2 分钟，但为了同样的准点率要早出门 8 分钟，每月还多花 ¥2,200。均值上占的便宜，被长尾吃掉了。",
+      "options": [
+        {
+          "name": "地铁 13 号线",
+          "input": {
+            "min": 40,
+            "mode": 50,
+            "max": 75,
+            "cost": 5
+          },
+          "dailyMean": 52.52,
+          "dailyP10": 44.53,
+          "dailyP50": 51.93,
+          "dailyP90": 61.38,
+          "spreadMinutes": 16.85,
+          "monthlyHoursP10": 37.59,
+          "monthlyHoursP50": 38.52,
+          "monthlyHoursP90": 39.4,
+          "monthlyCost": 220,
+          "suggestedDeparture": "08:26",
+          "lateProbAtSuggestedPct": 4.85,
+          "isFastest": false,
+          "isSteadiest": true,
+          "isCheapest": false
+        },
+        {
+          "name": "公交",
+          "input": {
+            "min": 45,
+            "mode": 60,
+            "max": 100,
+            "cost": 2
+          },
+          "dailyMean": 64.12,
+          "dailyP10": 51.72,
+          "dailyP50": 63.11,
+          "dailyP90": 77.99,
+          "spreadMinutes": 26.27,
+          "monthlyHoursP10": 45.63,
+          "monthlyHoursP50": 47.03,
+          "monthlyHoursP90": 48.42,
+          "monthlyCost": 88,
+          "suggestedDeparture": "08:08",
+          "lateProbAtSuggestedPct": 4.98,
+          "isFastest": false,
+          "isSteadiest": false,
+          "isCheapest": true
+        },
+        {
+          "name": "打车",
+          "input": {
+            "min": 30,
+            "mode": 45,
+            "max": 95,
+            "cost": 55
+          },
+          "dailyMean": 50.82,
+          "dailyP10": 36.72,
+          "dailyP50": 49.41,
+          "dailyP90": 66.93,
+          "spreadMinutes": 30.21,
+          "monthlyHoursP10": 35.61,
+          "monthlyHoursP50": 37.27,
+          "monthlyHoursP90": 38.9,
+          "monthlyCost": 2420,
+          "suggestedDeparture": "08:18",
+          "lateProbAtSuggestedPct": 4.91,
+          "isFastest": true,
+          "isSteadiest": false,
+          "isCheapest": false
+        },
+        {
+          "name": "自驾（含停车）",
+          "input": {
+            "min": 30,
+            "mode": 45,
+            "max": 100,
+            "cost": 50
+          },
+          "dailyMean": 51.65,
+          "dailyP10": 36.71,
+          "dailyP50": 50.12,
+          "dailyP90": 68.93,
+          "spreadMinutes": 32.22,
+          "monthlyHoursP10": 36.11,
+          "monthlyHoursP50": 37.86,
+          "monthlyHoursP90": 39.63,
+          "monthlyCost": 2200,
+          "suggestedDeparture": "08:15",
+          "lateProbAtSuggestedPct": 4.43,
+          "isFastest": false,
+          "isSteadiest": false,
+          "isCheapest": false
+        }
+      ]
+    },
+    {
+      "id": "shanghai",
+      "city": "上海",
+      "route": "张江 → 陆家嘴",
+      "champions": {
+        "fastest": "打车",
+        "steadiest": "地铁 2 号线",
+        "cheapest": "地铁 2 号线"
+      },
+      "championSummary": "最省时间是「打车」（月中位 28.7 小时）；最稳是「地铁 2 号线」（P10–P90 只差 12 分钟）；最便宜是「地铁 2 号线」（月 ¥220）。三个冠军不是同一个 —— 这就是需要看分布而不是看均值的原因。",
+      "departureInsight": "要把迟到概率压到 5% 以下，「地铁 2 号线」需 08:42 出门，「打车」需 08:36 出门——「打车」均值快 0 分钟，但为了同样的准点率要早出门 6 分钟，每月还多花 ¥1,980。均值上占的便宜，被长尾吃掉了。",
+      "options": [
+        {
+          "name": "地铁 2 号线",
+          "input": {
+            "min": 30,
+            "mode": 38,
+            "max": 55,
+            "cost": 5
+          },
+          "dailyMean": 39.49,
+          "dailyP10": 33.65,
+          "dailyP50": 39.14,
+          "dailyP90": 45.87,
+          "spreadMinutes": 12.22,
+          "monthlyHoursP10": 28.3,
+          "monthlyHoursP50": 28.95,
+          "monthlyHoursP90": 29.62,
+          "monthlyCost": 220,
+          "suggestedDeparture": "08:42",
+          "lateProbAtSuggestedPct": 4.15,
+          "isFastest": false,
+          "isSteadiest": true,
+          "isCheapest": true
+        },
+        {
+          "name": "打车",
+          "input": {
+            "min": 25,
+            "mode": 35,
+            "max": 70,
+            "cost": 50
+          },
+          "dailyMean": 39.18,
+          "dailyP10": 29.49,
+          "dailyP50": 38.2,
+          "dailyP90": 50.34,
+          "spreadMinutes": 20.85,
+          "monthlyHoursP10": 27.61,
+          "monthlyHoursP50": 28.72,
+          "monthlyHoursP90": 29.85,
+          "monthlyCost": 2200,
+          "suggestedDeparture": "08:36",
+          "lateProbAtSuggestedPct": 4.68,
+          "isFastest": true,
+          "isSteadiest": false,
+          "isCheapest": false
+        },
+        {
+          "name": "自驾（含停车）",
+          "input": {
+            "min": 25,
+            "mode": 38,
+            "max": 75,
+            "cost": 60
+          },
+          "dailyMean": 41.98,
+          "dailyP10": 30.86,
+          "dailyP50": 41.01,
+          "dailyP90": 54.55,
+          "spreadMinutes": 23.69,
+          "monthlyHoursP10": 29.54,
+          "monthlyHoursP50": 30.78,
+          "monthlyHoursP90": 32.06,
+          "monthlyCost": 2640,
+          "suggestedDeparture": "08:31",
+          "lateProbAtSuggestedPct": 4.24,
+          "isFastest": false,
+          "isSteadiest": false,
+          "isCheapest": false
+        }
+      ]
+    },
+    {
+      "id": "shenzhen",
+      "city": "深圳",
+      "route": "龙华 → 南山科技园",
+      "champions": {
+        "fastest": "打车",
+        "steadiest": "地铁 4 + 1 号线",
+        "cheapest": "地铁 4 + 1 号线"
+      },
+      "championSummary": "最省时间是「打车」（月中位 37.3 小时）；最稳是「地铁 4 + 1 号线」（P10–P90 只差 14 分钟）；最便宜是「地铁 4 + 1 号线」（月 ¥308）。三个冠军不是同一个 —— 这就是需要看分布而不是看均值的原因。",
+      "departureInsight": "要把迟到概率压到 5% 以下，「地铁 4 + 1 号线」需 08:19 出门，「打车」需 08:21 出门——「打车」均值快 10 分钟，出门时间也能晚 2 分钟，代价是每月多花 ¥2,332。",
+      "options": [
+        {
+          "name": "地铁 4 + 1 号线",
+          "input": {
+            "min": 50,
+            "mode": 58,
+            "max": 80,
+            "cost": 7
+          },
+          "dailyMean": 60.34,
+          "dailyP10": 53.62,
+          "dailyP50": 59.79,
+          "dailyP90": 67.87,
+          "spreadMinutes": 14.25,
+          "monthlyHoursP10": 43.51,
+          "monthlyHoursP50": 44.23,
+          "monthlyHoursP90": 44.99,
+          "monthlyCost": 308,
+          "suggestedDeparture": "08:19",
+          "lateProbAtSuggestedPct": 3.49,
+          "isFastest": false,
+          "isSteadiest": true,
+          "isCheapest": true
+        },
+        {
+          "name": "打车",
+          "input": {
+            "min": 35,
+            "mode": 45,
+            "max": 90,
+            "cost": 60
+          },
+          "dailyMean": 50.84,
+          "dailyP10": 39.51,
+          "dailyP50": 49.47,
+          "dailyP90": 64.25,
+          "spreadMinutes": 24.74,
+          "monthlyHoursP10": 35.95,
+          "monthlyHoursP50": 37.27,
+          "monthlyHoursP90": 38.63,
+          "monthlyCost": 2640,
+          "suggestedDeparture": "08:21",
+          "lateProbAtSuggestedPct": 4.54,
+          "isFastest": true,
+          "isSteadiest": false,
+          "isCheapest": false
+        },
+        {
+          "name": "自驾（含停车）",
+          "input": {
+            "min": 35,
+            "mode": 48,
+            "max": 95,
+            "cost": 45
+          },
+          "dailyMean": 53.66,
+          "dailyP10": 40.85,
+          "dailyP50": 52.32,
+          "dailyP90": 68.46,
+          "spreadMinutes": 27.6,
+          "monthlyHoursP10": 37.87,
+          "monthlyHoursP50": 39.34,
+          "monthlyHoursP90": 40.85,
+          "monthlyCost": 1980,
+          "suggestedDeparture": "08:16",
+          "lateProbAtSuggestedPct": 4.26,
+          "isFastest": false,
+          "isSteadiest": false,
+          "isCheapest": false
+        }
+      ]
+    }
+  ]
+}

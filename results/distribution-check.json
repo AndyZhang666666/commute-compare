@@ -1,0 +1,46 @@
+{
+  "generatedAt": "2026-09-14",
+  "seed": 20260914,
+  "samples": 100000,
+  "primary": {
+    "min": 30,
+    "mode": 40,
+    "max": 80,
+    "theoreticalMean": 45,
+    "sampleMean": 44.982,
+    "meanError": 0.018,
+    "meanErrorTolerance": 0.3,
+    "p10": 34.46,
+    "p50": 43.82,
+    "p90": 57.26,
+    "p50ExpectedRange": [
+      42,
+      44
+    ],
+    "sampleMin": 30.03,
+    "sampleMax": 78.06,
+    "rightSkewed": true
+  },
+  "extra": [
+    {
+      "min": 42,
+      "mode": 48,
+      "max": 65,
+      "samples": 100000,
+      "sampleMean": 49.844,
+      "theoreticalMean": 49.833,
+      "meanError": 0.011,
+      "p50": 49.42
+    },
+    {
+      "min": 28,
+      "mode": 35,
+      "max": 70,
+      "samples": 100000,
+      "sampleMean": 39.662,
+      "theoreticalMean": 39.667,
+      "meanError": 0.004,
+      "p50": 38.58
+    }
+  ]
+}
