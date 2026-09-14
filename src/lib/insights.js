@@ -57,17 +57,20 @@ export function departureInsight(result) {
   )} 出门，「${fast.name}」需 ${fmtClock(fast.suggestedDeparture)} 出门`;
 
   let tail;
-  if (meanGap > 0 && depGap > 0) {
+  if (meanGap >= 0.5 && depGap > 0) {
     tail = `——「${fast.name}」均值快 ${meanGap.toFixed(0)} 分钟，但为了同样的准点率要早出门 ${depGap.toFixed(
       0,
     )} 分钟`;
     if (costGap > 0) tail += `，每月还多花 ${yuan(costGap)}`;
     tail += "。均值上占的便宜，被长尾吃掉了。";
-  } else if (meanGap > 0 && depGap <= 0) {
+  } else if (meanGap >= 0.5 && depGap <= 0) {
     tail = `——「${fast.name}」均值快 ${meanGap.toFixed(0)} 分钟，出门时间也能晚 ${(-depGap).toFixed(
       0,
     )} 分钟`;
     tail += costGap > 0 ? `，代价是每月多花 ${yuan(costGap)}。` : "，而且不更贵。";
+  } else if (depGap > 0) {
+    tail = `——两者均值几乎一样，但「${fast.name}」尾巴更长，要早出门 ${depGap.toFixed(0)} 分钟`;
+    tail += costGap > 0 ? `，每月还多花 ${yuan(costGap)}。` : "。";
   } else {
     tail = `——两者均值接近，出门时间相差 ${Math.abs(depGap).toFixed(0)} 分钟。`;
   }
