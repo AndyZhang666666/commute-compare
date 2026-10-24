@@ -25,7 +25,7 @@ export default function MetricsTable({ result }: Props) {
               <th>方案</th>
               <th>月时间（中位）</th>
               <th>月花费</th>
-              <th>迟到概率</th>
+              <th>模型内迟到比例</th>
               <th>出门时间</th>
               <th>稳定性</th>
             </tr>
@@ -74,21 +74,21 @@ export default function MetricsTable({ result }: Props) {
       <div className={styles.champions}>
         {f && (
           <div className={styles.champ}>
-            <div className={styles.k}>⏱ 最省时间</div>
+            <div className={styles.k}>最省时间</div>
             <div className={styles.v}>{f.name}</div>
             <div className={styles.d}>月中位 {fmtHours(f.monthly.hoursP50)}</div>
           </div>
         )}
         {s && (
           <div className={styles.champ}>
-            <div className={styles.k}>⚡ 最稳</div>
+            <div className={styles.k}>最稳</div>
             <div className={styles.v}>{s.name}</div>
             <div className={styles.d}>P10–P90 只差 {s.daily.spread.toFixed(0)} 分钟</div>
           </div>
         )}
         {c && (
           <div className={styles.champ}>
-            <div className={styles.k}>💰 最便宜</div>
+            <div className={styles.k}>最便宜</div>
             <div className={styles.v}>{c.name}</div>
             <div className={styles.d}>月 {fmtYuan(c.monthly.cost)}</div>
           </div>

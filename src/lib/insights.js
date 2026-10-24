@@ -18,13 +18,13 @@ export function championSummary(result) {
   const c = byId(result, cheapest);
   if (!f || !s || !c) return "";
   if (fastest === steadiest && steadiest === cheapest) {
-    return `「${f.name}」同时是最省时间、最稳、最便宜的方案 —— 没什么好纠结的。`;
+    return `在当前输入下，「${f.name}」同时占优于时间、波动和费用。仍需考虑舒适度、天气和样本未覆盖的异常。`;
   }
   const parts = [];
   parts.push(`最省时间是「${f.name}」（月中位 ${h1(f.monthly.hoursP50)}）`);
   parts.push(`最稳是「${s.name}」（P10–P90 只差 ${s.daily.spread.toFixed(0)} 分钟）`);
   parts.push(`最便宜是「${c.name}」（月 ${yuan(c.monthly.cost)}）`);
-  return parts.join("；") + "。三个冠军不是同一个 —— 这就是需要看分布而不是看均值的原因。";
+  return parts.join("；") + "。这些结论只在当前输入与模型假设下成立。";
 }
 
 /**

@@ -54,21 +54,16 @@ export default function ArrivalChart({ result }: Props) {
         pts.push({ x: o.departure + mid, y: counts[b] / total / binWidth });
       }
       // 平滑：3 点移动平均，1 分钟 bin 会有毛刺
-      const sm = pts.map((p, k) => {
-        const a = pts[Math.max(0, k - 1)].y;
-        const c = pts[Math.min(pts.length - 1, k + 1)].y;
-        return { x: p.x, y: (a + p.y + c) / 3 };
-      });
       const color = optionColor(i);
       return {
         label: o.name,
-        data: sm,
+        data: pts,
         borderColor: color,
         backgroundColor: hex2rgba(color, 0.12),
         borderWidth: 2,
         pointRadius: 0,
         fill: "origin" as const,
-        tension: 0.3,
+        tension: 0,
       };
     });
 

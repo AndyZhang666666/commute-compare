@@ -10,6 +10,9 @@ export interface CommuteOption {
   max: number;
   /** 单程花费 */
   cost: number;
+  /** 实际门到门单程耗时；有记录时按经验分布重采样，不拟合三点估计。 */
+  observations?: number[];
+  source?: "preset" | "quick" | "estimate" | "observed";
   /**
    * 手动指定的出门时刻（距 00:00 的分钟数）。
    * 为空则用「建议出门时间」——即把迟到概率刚好压到阈值的最晚出门时刻。

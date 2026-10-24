@@ -25,7 +25,8 @@ export function sampleOption(option, daysPerMonth, months, rng) {
   for (let m = 0; m < months; m++) {
     let sum = 0;
     for (let d = 0; d < daysPerMonth * 2; d++) {
-      const t = samplePERT(option.min, option.mode, option.max, rng);
+      const records = option.observations;
+      const t = records?.length ? records[Math.floor(rng() * records.length)] : samplePERT(option.min, option.mode, option.max, rng);
       daily[k++] = t;
       sum += t;
     }
@@ -53,7 +54,7 @@ export function fractionAbove(sorted, threshold) {
  * 阈值为 0 时分位数取样本最大值，即「按最慢的一次算」。
  */
 export function suggestedDeparture(sortedDaily, workStart, lateTolerance, roundTo = 1) {
-  const q = quantileSorted(sortedDaily, 1 - lateTolerance);
+  const q = sortedDaily[Math.max(0, Math.ceil((1 - lateTolerance) * sortedDaily.length) - 1)];
   const raw = workStart - q;
   return Math.floor(raw / roundTo) * roundTo;
 }
@@ -170,15 +171,17 @@ export function lateProbAtDeparture(metrics, workStart, departure) {
 
 /** 分钟数 → "HH:MM" */
 export function fmtClock(minutes) {
-  const m = Math.round(minutes);
+  const raw = Math.round(minutes);
+  const m = ((raw % 1440) + 1440) % 1440;
   const h = Math.floor(m / 60);
   const mm = m % 60;
-  return `${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+  return `${raw < 0 ? '前日 ' : raw >= 1440 ? '次日 ' : ''}${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
 }
 
 /** "HH:MM" → 分钟数 */
 export function parseClock(str) {
   const m = /^(\d{1,2}):(\d{2})$/.exec(String(str).trim());
   if (!m) return NaN;
-  return Number(m[1]) * 60 + Number(m[2]);
+  const h = Number(m[1]), minute = Number(m[2]);
+  return h <= 23 && minute <= 59 ? h * 60 + minute : NaN;
 }

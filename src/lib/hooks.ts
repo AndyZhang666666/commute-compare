@@ -41,7 +41,7 @@ export function useTabs(initial: string, valid: string[]) {
 }
 
 /** 六个方案固定六色，与 globals.css 里的 --opt-N 一致。 */
-export const OPTION_COLORS = ["#2b6cb0", "#2f855a", "#dd6b20", "#6b46c1", "#718096", "#8b5a2b"];
+export const OPTION_COLORS = ["#2b6cb0", "#596673", "#9a6437", "#333b42", "#77838d", "#89796b"];
 export const optionColor = (i: number) => OPTION_COLORS[i % OPTION_COLORS.length];
 
 export const fmtPct = (v: number, digits = 1) => `${(v * 100).toFixed(digits)}%`;

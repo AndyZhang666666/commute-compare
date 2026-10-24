@@ -71,12 +71,12 @@ export default function PresetsPanel({ activePresetId, onLoad, currentOptions }:
         <h3>为什么用 PERT 分布</h3>
         <p>
           通勤时间天然右偏：一切顺利时快不过物理极限，但堵一次、错过一班车、下雨，就能多花几十分钟。
-          正态分布对称，会给出「大概率很快、也可能非常早到」这种不符合实际的形状，甚至能采出负时间；
-          三角分布虽然也有上下界，但尾部太薄，低估了「倒霉」的概率。
+          正态分布可能产生负时间。这里将 PERT 作为有上下界的估算模型，而不是已用真实交通数据证明更优的分布。
+          三角分布同样是可选近似；哪种尾部更贴近真实路线，需要记录来校准。
         </p>
         <p>
           PERT 是项目管理里三点估计的标准做法，用 Beta 分布由「最快 / 常见 / 最慢」唯一确定，
-          形状自然右偏，且严格落在 [最快, 最慢] 区间内：
+          形状由三点位置决定，不必然右偏；采样严格落在 [最快, 最慢] 区间内：
         </p>
         <div className={styles.formula}>{`mean = (min + 4·mode + max) / 6
 α = 1 + 4·(mode − min) / (max − min)
@@ -92,7 +92,7 @@ export default function PresetsPanel({ activePresetId, onLoad, currentOptions }:
 
         <h3>建议出门时间</h3>
         <p>
-          要保证迟到概率不超过阈值 <code>p</code>，就得让你的耗时在 (1−p) 分位数以内留出余量：
+          在给定输入分布下，按阈值 <code>p</code> 取 (1−p) 分位数，再向前取整到分钟；它不保证现实中的未来准点率：
         </p>
         <div className={styles.formula}>{`建议出门 = 上班时间 − Q(1 − p)   // Q 为耗时的分位数函数`}</div>
         <p>
@@ -141,7 +141,8 @@ export default function PresetsPanel({ activePresetId, onLoad, currentOptions }:
       <div className="panel">
         <h2>已知局限</h2>
         <ul>
-          <li>时间分布来自你的三点估计，不是实测 —— 你估得不准，算出来就不准</li>
+          <li>估算模式用三点假设；记录模式按用户记录经验重采样。两者都不接地图或验证记录真实性</li>
+          <li>少量记录不覆盖尾部；Wilson 区间仅描述观测比例，且出门时刻从同一批记录选择，不能当作独立验证</li>
           <li>假设每天独立同分布，没有建模「周一更堵」「雨天更慢」「周五好走」这类系统性差异</li>
           <li>按月模拟但月内每天独立，因此没有建模「连续倒霉」的月份，月总时间的 P90 偏乐观</li>
           <li>花费不含时间价值折算 —— 省下的 3 小时要不要用 1700 块钱换，工具不给答案</li>

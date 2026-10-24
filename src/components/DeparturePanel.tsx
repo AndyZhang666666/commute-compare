@@ -28,6 +28,7 @@ export default function DeparturePanel({ result, settings, setSettings, pending 
     <div>
       <div className="panel">
         <h2>出门时间 vs 迟到概率</h2>
+        <label>目标尾部阈值 <input aria-label="出门页目标阈值" type="number" min={1} max={20} value={Math.round(settings.lateTolerance * 100)} onChange={e => { const v = e.target.valueAsNumber; if (v >= 1 && v <= 20) setSettings({ ...settings, lateTolerance: v / 100 }); }} /> %</label>
         <div className={pending ? "pending" : undefined}>
           <DepartureChart
             result={result}
@@ -68,7 +69,7 @@ export default function DeparturePanel({ result, settings, setSettings, pending 
             </table>
           </div>
           <p className="note">
-            阈值 = {(settings.lateTolerance * 100).toFixed(1)}%。「比最快方案」为正表示可以比它晚出门，为负表示得更早。
+            阈值 = {(settings.lateTolerance * 100).toFixed(1)}%，只在当前输入分布下成立。「比最快方案」为正表示可以比它晚出门，为负表示得更早。
           </p>
         </div>
 
@@ -93,7 +94,7 @@ export default function DeparturePanel({ result, settings, setSettings, pending 
                 </li>
               </ul>
               <p className="note">
-                均值快的方案 P90 往往更差 —— 长尾把它在准点率上的优势吃掉了，这就是要早出门的原因。
+                均值更快不代表尾部也更短；具体谁要更早出门，以当前表格与分布为准。少量记录不能验证目标尾部阈值。
               </p>
             </>
           )}

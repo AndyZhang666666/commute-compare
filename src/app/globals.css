@@ -3,7 +3,7 @@
   --panel: #ffffff;
   --border: #e6e4e0;
   --text: #1f1e1c;
-  --muted: #78736c;
+  --muted: #625e58;
   --accent: #c0392b;
   --accent-soft: #fdf1ef;
   --ok: #2f7d4f;
@@ -16,7 +16,7 @@
   --opt-0: #2b6cb0;
   --opt-1: #2f855a;
   --opt-2: #dd6b20;
-  --opt-3: #6b46c1;
+  --opt-3: #51565c;
   --opt-4: #718096;
   --opt-5: #8b5a2b;
 }
@@ -135,3 +135,33 @@ header.top .meta { margin-top: 9px; font-size: 12px; color: var(--muted); }
 .tag.cheap { background: var(--warn-soft); color: var(--warn); }
 
 .pending { opacity: 0.55; transition: opacity 0.15s; }
+
+/* 1136 = 2 × 558 + 20; the route editors use the full canvas, not the old 340px rail. */
+.global-fields { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; }
+.input-modes { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+.input-modes button { font:inherit; border:1px solid var(--border); background:white; color:var(--text); padding:8px 16px; border-radius:6px; cursor:pointer; }
+.input-modes button[aria-pressed=true] { background:var(--text); color:white; }
+.route-inputs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; margin:18px 0; }
+.route-editor { background:#f5f5f4; border-radius:8px; padding:16px; min-width:0; }
+.route-title { display:flex; align-items:flex-end; gap:12px; justify-content:space-between; }
+.route-title label { flex:1; min-width:0; }
+.route-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:14px 0; }
+.route-editor label { display:block; font-size:14px; }
+.route-editor input,.route-editor textarea { display:block; width:100%; margin-top:6px; padding:9px 10px; border:1px solid #b5b4b0; border-radius:6px; font:inherit; color:var(--text); background:white; }
+.record-editor textarea { resize:vertical; }
+.record-editor button { margin:10px 10px 0 0; }
+.record-editor [role=status] { font-size:12px; color:var(--muted); }
+.source-note { font-size:12px; color:var(--muted); margin:8px 0; }
+.decision-overview { background:#edf2f7; border-radius:8px; padding:16px 18px; margin-bottom:17px; }
+.decision-overview h2 { font-size:16px; margin:0 0 6px; }
+.decision-overview p { margin:0 0 6px; }
+.decision-overview a { font-size:13px; }
+.input-error { padding:12px; background:#ffedea; color:#831c1e; }
+.result-grid { display:grid; grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); gap:20px; align-items:start; }
+.panel h2 { font-size:16px; letter-spacing:0; color:var(--text); }
+.evidence-row { display:grid; grid-template-columns:180px minmax(0,1fr); gap:20px; margin:16px 0; }
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible { outline:3px solid var(--info); outline-offset:3px; }
+button { min-height:38px; }
+@media(max-width:1050px){ .result-grid { grid-template-columns:1fr; } }
+@media(max-width:640px){ .wrap{padding:22px 16px 50px;} .global-fields,.route-inputs {grid-template-columns:1fr;} .evidence-row{grid-template-columns:1fr;gap:4px;} button{min-height:44px;} }
+@media(prefers-reduced-motion:reduce){.pending{transition:none;}}

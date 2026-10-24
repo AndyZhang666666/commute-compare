@@ -23,8 +23,6 @@ interface Props {
   onToleranceChange: (v: number) => void;
 }
 
-const X_MIN = 8 * 60; // 08:00
-const X_MAX = 9 * 60 + 20; // 09:20
 const Y_MAX = 0.6; // 迟到概率纵轴上限 60%
 
 /**
@@ -47,6 +45,9 @@ export default function DepartureChart({ result, onToleranceChange }: Props) {
 
     const workStart = result.settings.workStart;
     const tol = result.settings.lateTolerance;
+    const anchor = result.options.map(o => o.suggestedDeparture);
+    const X_MIN = Math.floor(Math.min(workStart - 80, ...anchor.map(v => v - 20)) / 10) * 10;
+    const X_MAX = Math.ceil(Math.max(workStart - 10, ...anchor.map(v => v + 20)) / 10) * 10;
 
     const datasets = result.options.map((o, i) => {
       const pts: { x: number; y: number }[] = [];
@@ -60,7 +61,7 @@ export default function DepartureChart({ result, onToleranceChange }: Props) {
         backgroundColor: optionColor(i),
         borderWidth: 2,
         pointRadius: 0,
-        tension: 0.25,
+        tension: 0,
       };
     });
 

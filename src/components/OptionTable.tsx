@@ -28,7 +28,7 @@ export default function OptionTable({ options, onChange, onAdd, suggested }: Pro
 
   const num = (id: string, key: "min" | "mode" | "max" | "cost") => (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.valueAsNumber;
-    update(id, { [key]: Number.isNaN(v) ? 0 : v });
+    update(id, { [key]: Number.isNaN(v) ? 0 : v, ...(key !== "cost" ? { observations: undefined, source: "estimate" as const } : {}) });
   };
 
   return (

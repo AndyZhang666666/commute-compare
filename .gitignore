@@ -8,3 +8,4 @@ out/
 *.log
 *.tsbuildinfo
 next-env.d.ts
+.taste-skill/
