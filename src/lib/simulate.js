@@ -1,5 +1,10 @@
 // 蒙特卡洛 + 指标。浏览器和 Node 校验脚本共用同一份。
-import { mulberry32, samplePERT, quantileSorted, mean } from "./distributions.js";
+import {
+  mulberry32,
+  samplePERT,
+  quantileSorted,
+  mean,
+} from "./distributions.js";
 
 export const DEFAULT_SETTINGS = Object.freeze({
   workStart: 9 * 60 + 30,
@@ -9,6 +14,21 @@ export const DEFAULT_SETTINGS = Object.freeze({
 
 export const DEFAULT_MONTHS = 2000;
 export const DEFAULT_SEED = 20260914;
+export const MODEL_VERSION = "stable-route-seed-v2-2026-10-25";
+
+function routeSeed(seed, id) {
+  // Preserve the archived complete city presets' sample streams; other IDs
+  // use a stable hash. Reordering or removing a route cannot reseed its peers.
+  const preset = /^(hangzhou|beijing|shanghai|shenzhen)-([0-5])$/.exec(id);
+  let offset;
+  if (preset) offset = 7919 * (Number(preset[2]) + 1);
+  else {
+    offset = 2166136261;
+    for (let i = 0; i < id.length; i++)
+      offset = Math.imul(offset ^ id.charCodeAt(i), 16777619) >>> 0;
+  }
+  return (seed + offset) >>> 0;
+}
 
 /** 分位数函数的步长：0.001，对应迟到概率能分辨到 0.1%。 */
 const Q_STEPS = 1000;
@@ -26,7 +46,9 @@ export function sampleOption(option, daysPerMonth, months, rng) {
     let sum = 0;
     for (let d = 0; d < daysPerMonth * 2; d++) {
       const records = option.observations;
-      const t = records?.length ? records[Math.floor(rng() * records.length)] : samplePERT(option.min, option.mode, option.max, rng);
+      const t = records?.length
+        ? records[Math.floor(rng() * records.length)]
+        : samplePERT(option.min, option.mode, option.max, rng);
       daily[k++] = t;
       sum += t;
     }
@@ -53,8 +75,16 @@ export function fractionAbove(sorted, threshold) {
  * 建议出门时刻 = 上班时刻 − 耗时分布的 (1 − 阈值) 分位数，向下取整到 roundTo 分钟。
  * 阈值为 0 时分位数取样本最大值，即「按最慢的一次算」。
  */
-export function suggestedDeparture(sortedDaily, workStart, lateTolerance, roundTo = 1) {
-  const q = sortedDaily[Math.max(0, Math.ceil((1 - lateTolerance) * sortedDaily.length) - 1)];
+export function suggestedDeparture(
+  sortedDaily,
+  workStart,
+  lateTolerance,
+  roundTo = 1,
+) {
+  const q =
+    sortedDaily[
+      Math.max(0, Math.ceil((1 - lateTolerance) * sortedDaily.length) - 1)
+    ];
   const raw = workStart - q;
   return Math.floor(raw / roundTo) * roundTo;
 }
@@ -62,7 +92,8 @@ export function suggestedDeparture(sortedDaily, workStart, lateTolerance, roundT
 /** 单日耗时直方图，bin 宽 1 分钟，范围覆盖 [min, max]。 */
 export function histogram(sortedDaily, binWidth = 1) {
   const lo = Math.floor(sortedDaily[0] / binWidth) * binWidth;
-  const hi = Math.ceil(sortedDaily[sortedDaily.length - 1] / binWidth) * binWidth;
+  const hi =
+    Math.ceil(sortedDaily[sortedDaily.length - 1] / binWidth) * binWidth;
   const bins = Math.max(1, Math.round((hi - lo) / binWidth));
   const counts = new Array(bins).fill(0);
   for (let i = 0; i < sortedDaily.length; i++) {
@@ -76,23 +107,43 @@ export function histogram(sortedDaily, binWidth = 1) {
 /** 分位数函数表：quantiles[i] = Q(i / Q_STEPS)。图 2 用它反查任意出门时刻的迟到概率。 */
 function quantileTable(sortedDaily) {
   const out = new Array(Q_STEPS + 1);
-  for (let i = 0; i <= Q_STEPS; i++) out[i] = quantileSorted(sortedDaily, i / Q_STEPS);
+  for (let i = 0; i <= Q_STEPS; i++)
+    out[i] = quantileSorted(sortedDaily, i / Q_STEPS);
   return out;
 }
 
-export function computeOptionMetrics(option, settings, months, rng, roundTo = 1) {
-  const { daily, monthly } = sampleOption(option, settings.daysPerMonth, months, rng);
+export function computeOptionMetrics(
+  option,
+  settings,
+  months,
+  rng,
+  roundTo = 1,
+) {
+  const { daily, monthly } = sampleOption(
+    option,
+    settings.daysPerMonth,
+    months,
+    rng,
+  );
   const p10 = quantileSorted(daily, 0.1);
   const p50 = quantileSorted(daily, 0.5);
   const p90 = quantileSorted(daily, 0.9);
-  const suggested = suggestedDeparture(daily, settings.workStart, settings.lateTolerance, roundTo);
+  const suggested = suggestedDeparture(
+    daily,
+    settings.workStart,
+    settings.lateTolerance,
+    roundTo,
+  );
   const departure =
     option.departureOverride == null || Number.isNaN(option.departureOverride)
       ? suggested
       : option.departureOverride;
   // 出门时刻 + 耗时 > 上班时刻 ⇔ 耗时 > 上班时刻 − 出门时刻
   const lateProb = fractionAbove(daily, settings.workStart - departure);
-  const lateProbAtSuggested = fractionAbove(daily, settings.workStart - suggested);
+  const lateProbAtSuggested = fractionAbove(
+    daily,
+    settings.workStart - suggested,
+  );
 
   return {
     id: option.id,
@@ -138,16 +189,19 @@ export function simulate(options, settings = DEFAULT_SETTINGS, opts = {}) {
   const seed = opts.seed ?? DEFAULT_SEED;
   const roundTo = opts.roundTo ?? 1;
   // 每个方案一个独立子种子：增删某个方案不影响其他方案的数字。
-  const results = options.map((o, i) => {
-    const rng = mulberry32((seed + 7919 * (i + 1)) >>> 0);
+  const results = options.map((o) => {
+    const rng = mulberry32(routeSeed(seed, o.id));
     return computeOptionMetrics(o, settings, months, rng, roundTo);
   });
   return {
+    modelVersion: MODEL_VERSION,
     settings,
     months,
     seed,
     options: results,
-    champions: results.length ? pickChampions(results) : { fastest: "", steadiest: "", cheapest: "" },
+    champions: results.length
+      ? pickChampions(results)
+      : { fastest: "", steadiest: "", cheapest: "" },
   };
 }
 
@@ -175,13 +229,14 @@ export function fmtClock(minutes) {
   const m = ((raw % 1440) + 1440) % 1440;
   const h = Math.floor(m / 60);
   const mm = m % 60;
-  return `${raw < 0 ? '前日 ' : raw >= 1440 ? '次日 ' : ''}${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+  return `${raw < 0 ? "前日 " : raw >= 1440 ? "次日 " : ""}${String(h).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
 }
 
 /** "HH:MM" → 分钟数 */
 export function parseClock(str) {
   const m = /^(\d{1,2}):(\d{2})$/.exec(String(str).trim());
   if (!m) return NaN;
-  const h = Number(m[1]), minute = Number(m[2]);
+  const h = Number(m[1]),
+    minute = Number(m[2]);
   return h <= 23 && minute <= 59 ? h * 60 + minute : NaN;
 }

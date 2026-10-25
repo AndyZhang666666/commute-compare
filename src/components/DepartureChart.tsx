@@ -19,7 +19,7 @@ Chart.register(LineController, LineElement, PointElement, LinearScale, Tooltip);
 
 interface Props {
   result: SimulationResult;
-  /** 拖动横线时回调，值域 [0.005, 0.5] */
+  /** 松开横线时提交，值域 [0.01, 0.20]，整百分点。 */
   onToleranceChange: (v: number) => void;
 }
 
@@ -34,6 +34,7 @@ export default function DepartureChart({ result, onToleranceChange }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chartRef = useRef<Chart | null>(null);
   const dragRef = useRef(false);
+  const previewRef = useRef<number | null>(null);
   const cbRef = useRef(onToleranceChange);
   cbRef.current = onToleranceChange;
 
@@ -45,9 +46,13 @@ export default function DepartureChart({ result, onToleranceChange }: Props) {
 
     const workStart = result.settings.workStart;
     const tol = result.settings.lateTolerance;
-    const anchor = result.options.map(o => o.suggestedDeparture);
-    const X_MIN = Math.floor(Math.min(workStart - 80, ...anchor.map(v => v - 20)) / 10) * 10;
-    const X_MAX = Math.ceil(Math.max(workStart - 10, ...anchor.map(v => v + 20)) / 10) * 10;
+    const anchor = result.options.map((o) => o.suggestedDeparture);
+    const X_MIN =
+      Math.floor(Math.min(workStart - 80, ...anchor.map((v) => v - 20)) / 10) *
+      10;
+    const X_MAX =
+      Math.ceil(Math.max(workStart - 10, ...anchor.map((v) => v + 20)) / 10) *
+      10;
 
     const datasets = result.options.map((o, i) => {
       const pts: { x: number; y: number }[] = [];
@@ -68,6 +73,7 @@ export default function DepartureChart({ result, onToleranceChange }: Props) {
     const tolLine: Plugin<"line"> = {
       id: "tolLine",
       afterDatasetsDraw(chart) {
+        const tol = previewRef.current ?? result.settings.lateTolerance;
         const { ctx: c, chartArea, scales } = chart;
         const y = scales.y.getPixelForValue(tol);
         if (y < chartArea.top || y > chartArea.bottom) return;
@@ -81,9 +87,10 @@ export default function DepartureChart({ result, onToleranceChange }: Props) {
         c.stroke();
         c.setLineDash([]);
         c.fillStyle = "#c0392b";
-        c.font = "12px -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif";
+        c.font =
+          "12px -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif";
         c.textAlign = "right";
-        const label = `可接受迟到 ${(tol * 100).toFixed(1)}% ← 拖我`;
+        const label = `目标阈值 ${(tol * 100).toFixed(0)}%（可拖动）`;
         c.fillText(label, chartArea.right - 4, y - 6);
         c.restore();
 
@@ -136,7 +143,12 @@ export default function DepartureChart({ result, onToleranceChange }: Props) {
               color: "#78736c",
             },
             grid: { color: "#f0eeea" },
-            title: { display: true, text: "出门时刻", color: "#78736c", font: { size: 11 } },
+            title: {
+              display: true,
+              text: "出门时刻",
+              color: "#78736c",
+              font: { size: 11 },
+            },
           },
           y: {
             min: 0,
@@ -148,7 +160,12 @@ export default function DepartureChart({ result, onToleranceChange }: Props) {
               color: "#78736c",
             },
             grid: { color: "#f0eeea" },
-            title: { display: true, text: "迟到概率", color: "#78736c", font: { size: 11 } },
+            title: {
+              display: true,
+              text: "迟到概率",
+              color: "#78736c",
+              font: { size: 11 },
+            },
           },
         },
         plugins: {
@@ -156,7 +173,8 @@ export default function DepartureChart({ result, onToleranceChange }: Props) {
           tooltip: {
             callbacks: {
               title: (items) => `${fmtClock(items[0].parsed.x)} 出门`,
-              label: (item) => `${item.dataset.label}：迟到 ${(item.parsed.y * 100).toFixed(1)}%`,
+              label: (item) =>
+                `${item.dataset.label}：迟到 ${(item.parsed.y * 100).toFixed(1)}%`,
             },
           },
         },
@@ -170,35 +188,61 @@ export default function DepartureChart({ result, onToleranceChange }: Props) {
       const rect = canvas.getBoundingClientRect();
       const v = chart.scales.y.getValueForPixel(clientY - rect.top);
       if (v == null || !Number.isFinite(v)) return null;
-      return Math.max(0.005, Math.min(0.5, v));
+      return Math.round(Math.max(0.01, Math.min(0.2, v)) * 100) / 100;
     };
 
     const onDown = (e: PointerEvent) => {
       const v = valueFromEvent(e.clientY);
       if (v == null) return;
+      const chart = chartRef.current;
+      if (!chart) return;
+      const rect = canvas.getBoundingClientRect(),
+        x = e.clientX - rect.left,
+        y = e.clientY - rect.top;
+      if (
+        x < chart.chartArea.left ||
+        x > chart.chartArea.right ||
+        Math.abs(y - chart.scales.y.getPixelForValue(tol)) > 14
+      )
+        return;
       dragRef.current = true;
+      previewRef.current = v;
       canvas.setPointerCapture(e.pointerId);
       canvas.style.cursor = "ns-resize";
-      cbRef.current(v);
+      chart.draw();
     };
     const onMove = (e: PointerEvent) => {
       if (!dragRef.current) return;
       const v = valueFromEvent(e.clientY);
-      if (v != null) cbRef.current(v);
+      if (v != null) {
+        previewRef.current = v;
+        chartRef.current?.draw();
+      }
     };
     const onUp = (e: PointerEvent) => {
       if (!dragRef.current) return;
       dragRef.current = false;
+      const value = previewRef.current;
+      previewRef.current = null;
       canvas.style.cursor = "";
       try {
         canvas.releasePointerCapture(e.pointerId);
       } catch {
         /* 已经释放 */
       }
+      chartRef.current?.draw();
+      if (e.type !== "pointercancel" && value != null) cbRef.current(value);
     };
     const onHover = (e: PointerEvent) => {
       if (dragRef.current) return;
-      canvas.style.cursor = valueFromEvent(e.clientY) != null ? "ns-resize" : "";
+      const chart = chartRef.current,
+        rect = canvas.getBoundingClientRect();
+      canvas.style.cursor =
+        chart &&
+        Math.abs(e.clientY - rect.top - chart.scales.y.getPixelForValue(tol)) <=
+          14
+          ? "ns-resize"
+          : "";
     };
 
     canvas.addEventListener("pointerdown", onDown);
@@ -208,6 +252,8 @@ export default function DepartureChart({ result, onToleranceChange }: Props) {
     canvas.addEventListener("pointermove", onHover);
 
     return () => {
+      dragRef.current = false;
+      previewRef.current = null;
       canvas.removeEventListener("pointerdown", onDown);
       canvas.removeEventListener("pointermove", onMove);
       canvas.removeEventListener("pointerup", onUp);
@@ -221,12 +267,19 @@ export default function DepartureChart({ result, onToleranceChange }: Props) {
   return (
     <div>
       <div className={styles.chartBox}>
-        <canvas ref={canvasRef} />
+        <canvas
+          ref={canvasRef}
+          role="img"
+          aria-label="出门时刻与模型内迟到比例；可拖动红线，或使用上方阈值输入框。详细数值见下方表格。"
+        />
       </div>
       <div className={styles.chartLegend}>
         {result.options.map((o, i) => (
           <span key={o.id} className={styles.item}>
-            <span className={styles.line} style={{ background: optionColor(i) }} />
+            <span
+              className={styles.line}
+              style={{ background: optionColor(i) }}
+            />
             {o.name} · 最晚 {fmtClock(o.suggestedDeparture)} 出门
           </span>
         ))}

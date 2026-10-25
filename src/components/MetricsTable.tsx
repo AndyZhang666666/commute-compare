@@ -4,6 +4,7 @@ import type { SimulationResult } from "@/lib/types";
 import { fmtClock } from "@/lib/simulate.js";
 import { fmtHours, fmtPct, fmtYuan } from "@/lib/hooks";
 import styles from "@/styles/Compare.module.css";
+import { championGroups } from "@/lib/insights.js";
 
 interface Props {
   result: SimulationResult;
@@ -11,6 +12,9 @@ interface Props {
 
 export default function MetricsTable({ result }: Props) {
   const { champions, settings } = result;
+  const groups = championGroups(result);
+  const names = (key: keyof typeof groups) =>
+    groups[key].map((o) => o.name).join("、");
   const byId = (id: string) => result.options.find((o) => o.id === id);
   const f = byId(champions.fastest);
   const s = byId(champions.steadiest);
@@ -38,18 +42,35 @@ export default function MetricsTable({ result }: Props) {
                 <tr key={o.id}>
                   <td>
                     {o.name}
-                    {o.id === champions.fastest && <span className="tag fast">最省时间</span>}
-                    {o.id === champions.steadiest && <span className="tag steady">最稳</span>}
-                    {o.id === champions.cheapest && <span className="tag cheap">最便宜</span>}
+                    {groups.fastest.some((v) => v.id === o.id) && (
+                      <span className="tag fast">
+                        {groups.fastest.length > 1 ? "并列" : ""}最省时间
+                      </span>
+                    )}
+                    {groups.steadiest.some((v) => v.id === o.id) && (
+                      <span className="tag steady">
+                        {groups.steadiest.length > 1 ? "并列" : ""}最稳
+                      </span>
+                    )}
+                    {groups.cheapest.some((v) => v.id === o.id) && (
+                      <span className="tag cheap">
+                        {groups.cheapest.length > 1 ? "并列" : ""}最便宜
+                      </span>
+                    )}
                   </td>
                   <td>
                     {fmtHours(o.monthly.hoursP50)}
                     <span className={styles.sub}>
-                      P10–P90 {fmtHours(o.monthly.hoursP10)}–{fmtHours(o.monthly.hoursP90)}
+                      P10–P90 {fmtHours(o.monthly.hoursP10)}–
+                      {fmtHours(o.monthly.hoursP90)}
                     </span>
                   </td>
                   <td>{fmtYuan(o.monthly.cost)}</td>
-                  <td className={`${styles.late} ${lateBad ? styles.bad : styles.ok}`}>{fmtPct(o.lateProb)}</td>
+                  <td
+                    className={`${styles.late} ${lateBad ? styles.bad : styles.ok}`}
+                  >
+                    {fmtPct(o.lateProb)}
+                  </td>
                   <td>
                     {fmtClock(o.departure)}
                     {manual ? (
@@ -75,21 +96,25 @@ export default function MetricsTable({ result }: Props) {
         {f && (
           <div className={styles.champ}>
             <div className={styles.k}>最省时间</div>
-            <div className={styles.v}>{f.name}</div>
-            <div className={styles.d}>月中位 {fmtHours(f.monthly.hoursP50)}</div>
+            <div className={styles.v}>{names("fastest")}</div>
+            <div className={styles.d}>
+              月中位 {fmtHours(f.monthly.hoursP50)}
+            </div>
           </div>
         )}
         {s && (
           <div className={styles.champ}>
             <div className={styles.k}>最稳</div>
-            <div className={styles.v}>{s.name}</div>
-            <div className={styles.d}>P10–P90 只差 {s.daily.spread.toFixed(0)} 分钟</div>
+            <div className={styles.v}>{names("steadiest")}</div>
+            <div className={styles.d}>
+              P10–P90 只差 {s.daily.spread.toFixed(0)} 分钟
+            </div>
           </div>
         )}
         {c && (
           <div className={styles.champ}>
             <div className={styles.k}>最便宜</div>
-            <div className={styles.v}>{c.name}</div>
+            <div className={styles.v}>{names("cheapest")}</div>
             <div className={styles.d}>月 {fmtYuan(c.monthly.cost)}</div>
           </div>
         )}

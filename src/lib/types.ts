@@ -77,6 +77,7 @@ export interface Champions {
 }
 
 export interface SimulationResult {
+  modelVersion: string;
   settings: GlobalSettings;
   months: number;
   seed: number;

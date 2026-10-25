@@ -6,6 +6,7 @@ import { departureInsight } from "@/lib/insights.js";
 import { fmtYuan } from "@/lib/hooks";
 import DepartureChart from "./DepartureChart";
 import styles from "@/styles/Compare.module.css";
+import NumberField from "./NumberField";
 
 interface Props {
   result: SimulationResult;
@@ -14,7 +15,12 @@ interface Props {
   pending: boolean;
 }
 
-export default function DeparturePanel({ result, settings, setSettings, pending }: Props) {
+export default function DeparturePanel({
+  result,
+  settings,
+  setSettings,
+  pending,
+}: Props) {
   const byId = (id: string) => result.options.find((o) => o.id === id);
   const f = byId(result.champions.fastest);
   const s = byId(result.champions.steadiest);
@@ -27,17 +33,33 @@ export default function DeparturePanel({ result, settings, setSettings, pending 
   return (
     <div>
       <div className="panel">
-        <h2>出门时间 vs 迟到概率</h2>
-        <label>目标尾部阈值 <input aria-label="出门页目标阈值" type="number" min={1} max={20} value={Math.round(settings.lateTolerance * 100)} onChange={e => { const v = e.target.valueAsNumber; if (v >= 1 && v <= 20) setSettings({ ...settings, lateTolerance: v / 100 }); }} /> %</label>
+        <h2>出门时间与尾部阈值</h2>
+        <label className="threshold-control">
+          目标尾部阈值{" "}
+          <NumberField
+            aria-label="出门页目标阈值"
+            min={1}
+            max={20}
+            integer
+            value={Math.round(settings.lateTolerance * 100)}
+            onCommit={(v) => {
+              setSettings({ ...settings, lateTolerance: v / 100 });
+            }}
+          />{" "}
+          %
+        </label>
         <div className={pending ? "pending" : undefined}>
           <DepartureChart
             result={result}
-            onToleranceChange={(v) => setSettings({ ...settings, lateTolerance: v })}
+            onToleranceChange={(v) =>
+              setSettings({ ...settings, lateTolerance: v })
+            }
           />
         </div>
         <p className="note">
-          红色横线可以拖动（在图上按住上下拖），它就是「可接受迟到概率」。曲线与它的交点 = 该方案的最晚出门时间。
-          想更稳就把线往下拖，出门时间会跟着提早。
+          按住红色横线上下拖动，松开后按 1%–20%
+          的整百分点更新。也可用上方输入框。曲线与它的交点 =
+          当前模型下的最晚出门时间。 想更稳就把线往下拖，出门时间会跟着提早。
         </p>
       </div>
 
@@ -60,7 +82,11 @@ export default function DeparturePanel({ result, settings, setSettings, pending 
                     <td>{o.name}</td>
                     <td>{fmtClock(o.suggestedDeparture)}</td>
                     <td>
-                      {f == null ? "—" : o.id === f.id ? "基准" : `${delta > 0 ? "+" : ""}${delta.toFixed(0)} 分钟`}
+                      {f == null
+                        ? "—"
+                        : o.id === f.id
+                          ? "基准"
+                          : `${delta > 0 ? "+" : ""}${delta.toFixed(0)} 分钟`}
                     </td>
                     <td>{fmtYuan(o.monthly.cost)}</td>
                   </tr>
@@ -69,7 +95,8 @@ export default function DeparturePanel({ result, settings, setSettings, pending 
             </table>
           </div>
           <p className="note">
-            阈值 = {(settings.lateTolerance * 100).toFixed(1)}%，只在当前输入分布下成立。「比最快方案」为正表示可以比它晚出门，为负表示得更早。
+            阈值 = {(settings.lateTolerance * 100).toFixed(1)}
+            %，只在当前输入分布下成立。「比最快方案」为正表示可以比它晚出门，为负表示得更早。
           </p>
         </div>
 
@@ -81,16 +108,20 @@ export default function DeparturePanel({ result, settings, setSettings, pending 
               <h3>这两个方案差在哪</h3>
               <ul>
                 <li>
-                  平均耗时：「{f.name}」{f.daily.mean.toFixed(1)} 分钟，「{s.name}」{s.daily.mean.toFixed(1)} 分钟
+                  平均耗时：「{f.name}」{f.daily.mean.toFixed(1)} 分钟，「
+                  {s.name}」{s.daily.mean.toFixed(1)} 分钟
                 </li>
                 <li>
-                  稳定性（P10–P90）：「{f.name}」{f.daily.spread.toFixed(0)} 分钟，「{s.name}」{s.daily.spread.toFixed(0)} 分钟
+                  稳定性（P10–P90）：「{f.name}」{f.daily.spread.toFixed(0)}{" "}
+                  分钟，「{s.name}」{s.daily.spread.toFixed(0)} 分钟
                 </li>
                 <li>
-                  月中位时间：「{f.name}」{f.monthly.hoursP50.toFixed(1)}h，「{s.name}」{s.monthly.hoursP50.toFixed(1)}h
+                  月中位时间：「{f.name}」{f.monthly.hoursP50.toFixed(1)}h，「
+                  {s.name}」{s.monthly.hoursP50.toFixed(1)}h
                 </li>
                 <li>
-                  月花费：「{f.name}」{fmtYuan(f.monthly.cost)}，「{s.name}」{fmtYuan(s.monthly.cost)}
+                  月花费：「{f.name}」{fmtYuan(f.monthly.cost)}，「{s.name}」
+                  {fmtYuan(s.monthly.cost)}
                 </li>
               </ul>
               <p className="note">

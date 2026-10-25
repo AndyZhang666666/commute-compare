@@ -165,3 +165,7 @@ button { min-height:38px; }
 @media(max-width:1050px){ .result-grid { grid-template-columns:1fr; } }
 @media(max-width:640px){ .wrap{padding:22px 16px 50px;} .global-fields,.route-inputs {grid-template-columns:1fr;} .evidence-row{grid-template-columns:1fr;gap:4px;} button{min-height:44px;} }
 @media(prefers-reduced-motion:reduce){.pending{transition:none;}}
+.product-en{display:inline-block;font-size:14px;font-weight:400;color:var(--muted);margin-left:14px;white-space:nowrap}
+@media(max-width:500px){.product-en{display:block;margin-left:0;font-size:12px}.top h1{line-height:1.4}}
+.draft-number{display:block;min-width:0}.draft-number>.input-error{display:block;font-size:12px;max-width:32ch;margin-top:4px}.draft-number input[aria-invalid=true]{border-color:#a12e23}
+.threshold-control{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:12px 0 16px}.threshold-control .draft-number{display:inline-flex;flex-direction:column;width:90px}.threshold-control input{width:100%;min-height:44px;border:1px solid var(--border);border-radius:6px;padding:8px 12px;background:var(--panel);font:inherit;color:var(--text)}

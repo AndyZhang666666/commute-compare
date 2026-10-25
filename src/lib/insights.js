@@ -8,10 +8,37 @@ const yuan = (x) => `¥${Math.round(x).toLocaleString("zh-CN")}`;
 /** 找 metrics */
 const byId = (result, id) => result.options.find((o) => o.id === id);
 
+export function championGroups(result) {
+  const group = (value) => {
+    const min = Math.min(...result.options.map(value));
+    return result.options.filter((o) => Math.abs(value(o) - min) < 1e-9);
+  };
+  return {
+    fastest: group((o) => o.monthly.hoursP50),
+    steadiest: group((o) => o.daily.spread),
+    cheapest: group((o) => o.monthly.cost),
+  };
+}
+
 /**
  * 主页面顶部的一句话结论：三个冠军是不是同一个方案。
  */
 export function championSummary(result) {
+  const groups = championGroups(result);
+  if (Object.values(groups).some((g) => g.length > 1)) {
+    return (
+      [
+        ["fastest", "月中位时间最少"],
+        ["steadiest", "P10–P90波动最小"],
+        ["cheapest", "月费用最低"],
+      ]
+        .map(
+          ([k, label]) =>
+            `${label}${groups[k].length > 1 ? "（并列）" : ""}：${groups[k].map((o) => `「${o.name}」`).join("、")}`,
+        )
+        .join("；") + "。仅按当前输入比较，不代表真实优势或未来准点率。"
+    );
+  }
   const { fastest, steadiest, cheapest } = result.champions;
   const f = byId(result, fastest);
   const s = byId(result, steadiest);
@@ -22,7 +49,9 @@ export function championSummary(result) {
   }
   const parts = [];
   parts.push(`最省时间是「${f.name}」（月中位 ${h1(f.monthly.hoursP50)}）`);
-  parts.push(`最稳是「${s.name}」（P10–P90 只差 ${s.daily.spread.toFixed(0)} 分钟）`);
+  parts.push(
+    `最稳是「${s.name}」（P10–P90 只差 ${s.daily.spread.toFixed(0)} 分钟）`,
+  );
   parts.push(`最便宜是「${c.name}」（月 ${yuan(c.monthly.cost)}）`);
   return parts.join("；") + "。这些结论只在当前输入与模型假设下成立。";
 }
@@ -42,10 +71,16 @@ export function departureInsight(result) {
 
   // 基准：最稳的方案；对照：均值最快的方案。两者相同时改用第二快的。
   const steady = byId(result, result.champions.steadiest);
-  let fast = opts.reduce((b, o) => (o.daily.mean < b.daily.mean ? o : b), opts[0]);
+  let fast = opts.reduce(
+    (b, o) => (o.daily.mean < b.daily.mean ? o : b),
+    opts[0],
+  );
   if (fast.id === steady.id) {
     const others = opts.filter((o) => o.id !== steady.id);
-    fast = others.reduce((b, o) => (o.daily.mean < b.daily.mean ? o : b), others[0]);
+    fast = others.reduce(
+      (b, o) => (o.daily.mean < b.daily.mean ? o : b),
+      others[0],
+    );
   }
 
   const meanGap = steady.daily.mean - fast.daily.mean; // >0 表示 fast 均值更快
@@ -67,7 +102,8 @@ export function departureInsight(result) {
     tail = `——「${fast.name}」均值快 ${meanGap.toFixed(0)} 分钟，出门时间也能晚 ${(-depGap).toFixed(
       0,
     )} 分钟`;
-    tail += costGap > 0 ? `，代价是每月多花 ${yuan(costGap)}。` : "，而且不更贵。";
+    tail +=
+      costGap > 0 ? `，代价是每月多花 ${yuan(costGap)}。` : "，而且不更贵。";
   } else if (depGap > 0) {
     tail = `——两者均值几乎一样，但「${fast.name}」尾巴更长，要早出门 ${depGap.toFixed(0)} 分钟`;
     tail += costGap > 0 ? `，每月还多花 ${yuan(costGap)}。` : "。";
@@ -100,6 +136,11 @@ export function priceInsights(result) {
       const ppm = pricePerMinute(o, cheap);
       const savedMin = (cheap.monthly.hoursP50 - o.monthly.hoursP50) * 60;
       if (ppm == null) {
+        if (Math.abs(o.monthly.cost - cheap.monthly.cost) < 1e-9) {
+          return Math.abs(savedMin) < 1e-9
+            ? `「${o.name}」与「${cheap.name}」月费用、月中位时间相同。`
+            : `「${o.name}」与「${cheap.name}」费用相同，月中位时间${savedMin > 0 ? "少" : "多"} ${Math.abs(savedMin).toFixed(0)} 分钟；仍需比较尾部与实际体验。`;
+        }
         if (savedMin <= 0)
           return `「${o.name}」比「${cheap.name}」贵，月时间却不更少 —— 不划算。`;
         return `「${o.name}」比「${cheap.name}」每月省 ${savedMin.toFixed(0)} 分钟，而且不更贵。`;

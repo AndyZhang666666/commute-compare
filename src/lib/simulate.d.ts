@@ -10,6 +10,7 @@ import type {
 export const DEFAULT_SETTINGS: Readonly<GlobalSettings>;
 export const DEFAULT_MONTHS: number;
 export const DEFAULT_SEED: number;
+export const MODEL_VERSION: string;
 
 export function sampleOption(
   option: CommuteOption,
