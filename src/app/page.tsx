@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import type { CommuteOption, GlobalSettings } from "@/lib/types";
 import { DEFAULT_SETTINGS, simulate } from "@/lib/simulate.js";
 import {
@@ -14,6 +14,8 @@ import DeparturePanel from "@/components/DeparturePanel";
 import PresetsPanel from "@/components/PresetsPanel";
 import { decodeDraft } from "@/lib/draft.js";
 
+import {InputValidityContext} from "@/lib/input-validity";
+
 const TABS = [
   { id: "compare", label: "方案对比" },
   { id: "departure", label: "出门时间" },
@@ -25,6 +27,9 @@ export default function Page() {
     "compare",
     TABS.map((t) => t.id),
   );
+  const [inputDrafts,setInputDrafts]=useState<Record<string,boolean>>({});
+  const reportInput=useCallback((id:string,dirty:boolean)=>setInputDrafts(old=>old[id]===dirty?old:{...old,[id]:dirty}),[]);
+  const inputPending=Object.values(inputDrafts).some(Boolean);
   const [presetId, setPresetId] = useState(DEFAULT_PRESET_ID);
   const [options, setOptions] = useState<CommuteOption[]>(() =>
     presetToOptions(getPreset(DEFAULT_PRESET_ID)).filter(
@@ -77,7 +82,7 @@ export default function Page() {
       o.mode < o.min ||
       o.max < o.mode ||
       o.max > 360 ||
-      o.cost < 0,
+      o.cost < 0 || o.cost > 2000,
   );
   const validOptions = useMemo(
     () => options.filter((o) => !invalid.some((v) => v.id === o.id)),
@@ -101,7 +106,7 @@ export default function Page() {
   const current = result;
 
   return (
-    <div className="wrap">
+    <InputValidityContext.Provider value={reportInput}><div className="wrap">
       <header className="top">
         <h1>
           通勤方案比较器<span className="product-en">Commute Compare</span>
@@ -155,7 +160,7 @@ export default function Page() {
           settings={settings}
           setSettings={setSettings}
           result={current}
-          pending={!storageReady || pending || invalid.length > 0}
+          pending={!storageReady || inputPending || pending || invalid.length > 0}
         />
       )}
       {tab === "departure" && (
@@ -163,7 +168,7 @@ export default function Page() {
           result={current}
           settings={settings}
           setSettings={setSettings}
-          pending={!storageReady || pending || invalid.length > 0}
+          pending={!storageReady || inputPending || pending || invalid.length > 0}
         />
       )}
       {tab === "presets" && (
@@ -178,6 +183,6 @@ export default function Page() {
         估算使用 PERT
         分布，记录模式使用经验重采样。月度时间与费用均按往返、返程同分布估计；不建模雨天等相关性，不保证未来准点率，不接地图或实时路况。
       </footer>
-    </div>
+    </div></InputValidityContext.Provider>
   );
 }

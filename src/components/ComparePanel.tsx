@@ -1,12 +1,15 @@
 "use client";
 
+import {useState,useContext} from "react";
+import {InputValidityContext} from "@/lib/input-validity";
+import DecisionPanel from "./DecisionPanel";
 import type {
   CommuteOption,
   GlobalSettings,
   SimulationResult,
 } from "@/lib/types";
 import { fmtClock, parseClock } from "@/lib/simulate.js";
-import { championSummary, priceInsights } from "@/lib/insights.js";
+import { championSummary } from "@/lib/insights.js";
 import RouteInputs from "./RouteInputs";
 import { observedRisk, recordNotice } from "@/lib/observations.js";
 import MetricsTable from "./MetricsTable";
@@ -31,42 +34,15 @@ export default function ComparePanel({
   result,
   pending,
 }: Props) {
+  const [calibration,setCalibration]=useState<{id:string;nonce:number}>();
+  const reportInput=useContext(InputValidityContext);
   const suggested: Record<string, number> = {};
   for (const o of result.options) suggested[o.id] = o.suggestedDeparture;
 
-  const price = priceInsights(result);
-  const download = () => {
-    const payload = {
-      exportedAt: new Date().toISOString(),
-      inputs: options,
-      settings,
-      result,
-      boundary:
-        "估算或用户记录条件下的情景比较；非实时路况、非未来准点率保证。月度往返假设返程同分布，未建模日间相关性。",
-    };
-    const url = URL.createObjectURL(
-      new Blob([JSON.stringify(payload, null, 2)], {
-        type: "application/json",
-      }),
-    );
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "commute-decision.json";
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  };
 
   return (
     <div>
-      <aside className="decision-overview" aria-busy={pending}>
-        <h2>当前比较</h2>
-        <p>
-          {pending
-            ? "输入已修改，正在更新比较；暂不据旧结果做决定。"
-            : championSummary(result)}
-        </p>
-        <a href="#comparison-results">看完整比较与依据</a>
-      </aside>
+
       <div>
         <div className="panel">
           <h2>你的到达要求</h2>
@@ -79,11 +55,11 @@ export default function ComparePanel({
                 inputMode="numeric"
                 defaultValue={fmtClock(settings.workStart)}
                 key={`ws-${settings.workStart}`}
+                onChange={()=>reportInput("work-start",true)}
                 onBlur={(e) => {
                   const m = parseClock(e.target.value);
-                  if (!Number.isNaN(m))
-                    setSettings({ ...settings, workStart: m });
-                  else e.target.value = fmtClock(settings.workStart);
+                  if (!Number.isNaN(m)){setSettings({ ...settings, workStart: m });reportInput("work-start",false);}
+                  else {e.target.setAttribute("aria-invalid","true");reportInput("work-start",true);}
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") (e.target as HTMLInputElement).blur();
@@ -103,7 +79,7 @@ export default function ComparePanel({
                 }}
               />
             </div>
-            <div className={styles.field}>
+            <details className="tail-settings"><summary>尾部阈值（高级）</summary><div className={styles.field}>
               <label htmlFor="tol">目标尾部阈值 · 不是准点承诺</label>
               <div className={styles.range}>
                 <input
@@ -124,7 +100,7 @@ export default function ComparePanel({
                   {(settings.lateTolerance * 100).toFixed(0)}%
                 </span>
               </div>
-            </div>
+            </div></details>
           </div>
         </div>
 
@@ -134,10 +110,13 @@ export default function ComparePanel({
             options={options}
             onChange={setOptions}
             suggested={suggested}
+            calibration={calibration}
           />
         </div>
       </div>
 
+      <DecisionPanel options={options} settings={settings} result={result} pending={pending} onCalibrate={id=>{setCalibration({id,nonce:Date.now()});document.querySelector(".input-modes")?.scrollIntoView({block:"start",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}}/>
+      <details className="detail-comparison"><summary>详细图表与逐项比较</summary>
       <div className="result-grid" id="comparison-results" aria-busy={pending}>
         <div className="panel">
           <h2>到达时间 · 当前假设下</h2>
@@ -163,16 +142,7 @@ export default function ComparePanel({
           <div className="insight" style={{ marginTop: 14 }}>
             {championSummary(result)}
           </div>
-          {price.length > 0 && (
-            <>
-              <h3>多花的钱买了多少时间</h3>
-              <ul>
-                {price.map((line, i) => (
-                  <li key={i}>{line}</li>
-                ))}
-              </ul>
-            </>
-          )}
+
         </div>
       </div>
       <section className="panel evidence-panel">
@@ -213,14 +183,8 @@ export default function ComparePanel({
         <p className="note">
           下一步：连续记录相近出发时段的工作日耗时，并单独观察雨天或异常延误。没有观测到迟到，不等于不存在迟到风险。
         </p>
-        <button
-          className="btn primary"
-          disabled={pending || !result.options.length}
-          onClick={download}
-        >
-          导出这次决策与依据
-        </button>
-      </section>
+
+      </section></details>
     </div>
   );
 }

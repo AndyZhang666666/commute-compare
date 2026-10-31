@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { CommuteOption } from "@/lib/types";
 import { parseObservations, quickEstimate } from "@/lib/observations.js";
 import OptionTable from "./OptionTable";
@@ -10,12 +10,15 @@ export default function RouteInputs({
   options,
   onChange,
   suggested,
+  calibration,
 }: {
   options: CommuteOption[];
   onChange: (v: CommuteOption[]) => void;
   suggested: Record<string, number>;
+  calibration?: {id:string;nonce:number};
 }) {
   const [mode, setMode] = useState("quick");
+  useEffect(()=>{if(calibration){setMode("records");setTimeout(()=>document.getElementById("records-"+calibration.id)?.focus(),0);}},[calibration]);
   const add = () =>
     onChange([
       ...options,
@@ -121,7 +124,7 @@ export default function RouteInputs({
                     />
                   </label>
                 </div>
-                {mode === "records" && (
+                {mode === "records" && (!calibration || calibration.id===o.id) && (
                   <RecordEditor
                     key={`${o.id}-${o.observations?.join(",") || ""}`}
                     option={o}
@@ -167,6 +170,7 @@ function RecordEditor({
       <label>
         实际单程耗时 / 分钟
         <textarea
+          id={"records-"+option.id}
           rows={2}
           value={text}
           aria-label={`${option.name}实际耗时记录`}
