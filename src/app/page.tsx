@@ -77,6 +77,7 @@ export default function Page() {
   }, [options, settings, storageReady, canSave]);
   const invalid = options.filter(
     (o) =>
+      !o.name.trim() ||
       ![o.min, o.mode, o.max, o.cost].every(Number.isFinite) ||
       o.min < 1 ||
       o.mode < o.min ||
