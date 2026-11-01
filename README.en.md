@@ -4,7 +4,7 @@
 
 Does the route with a lower average duration let you leave later?
 
-![Actual Commute Compare interface](https://andyzhang666666.github.io/assets/work/showcase/commute-crop.jpg)
+![Actual Commute Compare interface](docs/assets/commute-preview.jpg)
 
 ## Product decisions
 
@@ -47,3 +47,7 @@ These commands are provided for reproduction; this documentation update did not 
 - [Implementation details and original records, Chinese](README.md)
 
 Use the repository’s existing licence and notices. This update does not change usage rights.
+
+## Personal inputs and portable results · 2026-11-01
+
+This update adds personal inputs and a portable result, with the reviewed implementation integrated through a release branch. Compare personal routes, calibrate one route with records, and save a reason with an independent decision snapshot. Estimates and recorded observations remain distinct. Changed inputs require confirmation before exporting a current choice.

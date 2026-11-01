@@ -1,0 +1,28 @@
+[
+  {
+    "file": "commute-preview.jpg",
+    "copiedAt": "2026-11-01",
+    "sourceCommit": "6940fa0055c0f6003f7d4ebf147a53c1cd432a88",
+    "sourceRepository": "AndyZhang666666/AndyZhang666666.github.io",
+    "sourceCapture": {
+      "id": "commute",
+      "route": "/commute-compare/",
+      "full": "assets/work/showcase/commute.jpg",
+      "crop": "assets/work/showcase/commute-crop.jpg",
+      "viewport": {
+        "width": 1280,
+        "height": 1000
+      },
+      "capturedAt": "2026-10-31T02:12:03.589Z",
+      "state": "Two illustrative routes, canonical monthly tradeoff and a disposable example choice with reason; independent snapshot is not a real travel observation.",
+      "fullPage": true,
+      "cropSize": {
+        "width": 1136,
+        "height": 705
+      },
+      "fullSha256": "5ada7963adb40aed94421591899e2df5bc185da3b134a9e9025f3200cc404c49",
+      "cropSha256": "9d78121e4958e48fd23eb64ce49d2a9d47047e82e204fd32b4c20cee2894e8dc"
+    },
+    "sha256": "9d78121e4958e48fd23eb64ce49d2a9d47047e82e204fd32b4c20cee2894e8dc"
+  }
+]

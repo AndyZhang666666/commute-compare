@@ -1,5 +1,6 @@
 "use client";
-import { useId, useState, type InputHTMLAttributes } from "react";
+import { useId, useState, useContext, useEffect, type InputHTMLAttributes } from "react";
+import {InputValidityContext} from "@/lib/input-validity";
 type Props = Omit<
   InputHTMLAttributes<HTMLInputElement>,
   "value" | "onChange" | "min" | "max"
@@ -17,6 +18,8 @@ function Draft({ value, min, max, integer = false, onCommit, ...rest }: Props) {
   const [text, setText] = useState(String(value)),
     [error, setError] = useState(""),
     id = useId();
+  const report=useContext(InputValidityContext);
+  useEffect(()=>()=>report(id,false),[id,report]);
   function commit() {
     const n = text.trim() ? Number(text) : NaN;
     if (
@@ -25,12 +28,13 @@ function Draft({ value, min, max, integer = false, onCommit, ...rest }: Props) {
       n > max ||
       (integer && !Number.isInteger(n))
     ) {
+      report(id,true);
       setError(
         `未应用此输入：须为${min}–${max}${integer ? "的整数" : ""}；仍按${value}计算。`,
       );
       return;
     }
-    setError("");
+    setError("");report(id,false);
     if (n !== value) onCommit(n);
   }
   return (
@@ -45,14 +49,14 @@ function Draft({ value, min, max, integer = false, onCommit, ...rest }: Props) {
         aria-invalid={Boolean(error)}
         aria-describedby={error ? id : undefined}
         onChange={(e) => {
-          setText(e.target.value);
+          setText(e.target.value);report(id,true);
           setError("");
         }}
         onBlur={commit}
         onKeyDown={(e) => {
           if (e.key === "Enter") e.currentTarget.blur();
           if (e.key === "Escape") {
-            setText(String(value));
+            setText(String(value));report(id,false);
             setError("");
           }
         }}
