@@ -42,8 +42,9 @@ export default function ComparePanel({
 
   return (
     <div>
-
-      <div>
+      <nav className="commute-jumps" aria-label="比较工作区"><a href="#route-settings">路线与条件</a><a href="#personal-decision">查看时间与费用 ↓</a></nav>
+      <div className="commute-workbench">
+      <div id="route-settings" className="commute-input-column">
         <div className="panel">
           <h2>你的到达要求</h2>
           <div className="global-fields">
@@ -116,6 +117,7 @@ export default function ComparePanel({
       </div>
 
       <DecisionPanel options={options} settings={settings} result={result} pending={pending} onCalibrate={id=>{setCalibration({id,nonce:Date.now()});document.querySelector(".input-modes")?.scrollIntoView({block:"start",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}}/>
+      </div>
       <details className="detail-comparison"><summary>详细图表与逐项比较</summary>
       <div className="result-grid" id="comparison-results" aria-busy={pending}>
         <div className="panel">
