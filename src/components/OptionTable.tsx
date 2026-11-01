@@ -5,6 +5,7 @@ import { fmtClock, parseClock } from "@/lib/simulate.js";
 import { optionColor } from "@/lib/hooks";
 import styles from "@/styles/Compare.module.css";
 import NumberField from "./NumberField";
+import {switchToEstimate} from '@/lib/record-trial.js';
 
 interface Props {
   options: CommuteOption[];
@@ -34,6 +35,11 @@ export default function OptionTable({
 
   const num =
     (id: string, key: "min" | "mode" | "max" | "cost") => (v: number) => {
+      const old=options.find(o=>o.id===id);
+      if(key!=='cost'&&old?.observations?.length){
+        if(!window.confirm(`改回三点估算？${old.observations.length}条个人记录会保留，可在路线输入中恢复。`))return;
+        onChange(options.map(o=>o.id===id?switchToEstimate(o,{[key]:v}):o));return;
+      }
       update(id, {
         [key]: v,
         ...(key !== "cost"
@@ -84,6 +90,7 @@ export default function OptionTable({
                       min={1}
                       max={360}
                       value={o.min}
+                      disabled={!!o.observations?.length}
                       onCommit={num(o.id, "min")}
                       className={bad ? styles.invalid : ""}
                       aria-label="最快（分钟）"
@@ -94,6 +101,7 @@ export default function OptionTable({
                       min={1}
                       max={360}
                       value={o.mode}
+                      disabled={!!o.observations?.length}
                       onCommit={num(o.id, "mode")}
                       className={bad ? styles.invalid : ""}
                       aria-label="常见（分钟）"
@@ -104,6 +112,7 @@ export default function OptionTable({
                       min={1}
                       max={360}
                       value={o.max}
+                      disabled={!!o.observations?.length}
                       onCommit={num(o.id, "max")}
                       className={bad ? styles.invalid : ""}
                       aria-label="最慢（分钟）"
