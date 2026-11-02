@@ -1,12 +1,15 @@
 # Commute Compare
 
+Visual refresh approved after user review, 2026-11-02: [design, references and before/after screenshots](docs/VISUAL-CRAFT-20261102.md). Existing product behavior is preserved; the merge commit and Pages workflow record publication.
+
+
 [中文](README.md) · [Project index](https://github.com/AndyZhang666666/AndyZhang666666/blob/main/PROJECTS.en.md) · [Live demo](https://andyzhang666666.github.io/commute-compare/)
 
 Does the route with a lower average duration let you leave later?
 
 Approved release, 2026-11-02: Optional budget and earliest-departure constraints, trial-record previews and reconfirmed decisions now share one workspace. Model checks, a static build and integrated browser review are complete; this release ships with the portfolio. [Design and boundaries](docs/PERSONAL-ROUTE-20261101.md).
 
-![Actual Commute Compare interface](docs/assets/commute-preview.jpg)
+![Actual Commute Compare interface](docs/assets/visual-craft-20261102/after-desktop.jpg)
 
 ## Product decisions
 

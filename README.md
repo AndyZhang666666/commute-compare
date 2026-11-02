@@ -1,12 +1,15 @@
 # Commute Compare · 通勤方案比较器
 
+2026-11-02 视觉打磨已通过用户审阅，获批合并发布：[设计取舍、官方参考与前后截图](docs/VISUAL-CRAFT-20261102.md)。本次保留原有产品功能；发布记录见仓库合并提交 与 Pages 工作流。
+
+
 [在线体验](https://andyzhang666666.github.io/commute-compare/) · [English](README.en.md) · [作品索引](https://github.com/AndyZhang666666/AndyZhang666666/blob/main/PROJECTS.md)
 
 平均更快的路线，是否也能让人更晚出门？
 
 2026-11-02 获批发布：加入月预算与最早出门条件，逐路线说明冲突；追加实际耗时先预演再应用，旧记录可恢复。比较、建议出门与选择放在同一工作区，旧选择随条件变化转为待确认。模型检查、静态构建及整合浏览器审阅已完成，本次随官网同步发布。[设计与边界](docs/PERSONAL-ROUTE-20261101.md)。
 
-![Commute Compare · 通勤方案比较器的实际产品界面](docs/assets/commute-preview.jpg)
+![Commute Compare · 通勤方案比较器的实际产品界面](docs/assets/visual-craft-20261102/after-desktop.jpg)
 
 ## 值得看的设计
 
