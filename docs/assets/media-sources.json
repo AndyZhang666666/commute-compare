@@ -2,7 +2,7 @@
   {
     "file": "commute-preview.jpg",
     "copiedAt": "2026-11-01",
-    "sourceCommit": "c1abd11e106defe8d5f2a35422762c8032d8d654",
+    "sourceCommit": "9581c2e5f9b22b860606e8465a673452f5d91101",
     "sourceRepository": "AndyZhang666666/commute-compare",
     "sourceCapture": {
       "id": "commute",
@@ -13,20 +13,20 @@
         "width": 1440,
         "height": 900
       },
-      "capturedAt": "2026-11-01T10:24:14.286Z",
-      "state": "Illustrative Hangzhou routes. Input/result columns and the existing P10/P50/P90 quantiles shown on one scale. No personal travel observations or saved decision.",
+      "capturedAt": "2026-11-01T14:34:07.054124+00:00",
+      "state": "Illustrative Hangzhou estimates with optional QA budget 500 CNY and earliest departure08:30. Source is estimate, not real observed trips; archived QA records are not used. No traffic API or future punctuality guarantee.",
       "fullPage": false,
       "cropSize": {
         "width": 1440,
         "height": 900
       },
-      "fullSha256": "2fca858325cc7c9e786ee4db5121be9b11dfda133a92fe38b4907e25fe8227c2",
-      "cropSha256": "2fca858325cc7c9e786ee4db5121be9b11dfda133a92fe38b4907e25fe8227c2",
-      "source": "http://127.0.0.1:8822",
-      "sourceCommit": "c1abd11e106defe8d5f2a35422762c8032d8d654",
+      "fullSha256": "8772b87ec282fc9827cb602df9b5632a95ab5b8e4bb0b7addf4d49c75a3119e7",
+      "cropSha256": "8772b87ec282fc9827cb602df9b5632a95ab5b8e4bb0b7addf4d49c75a3119e7",
+      "source": "http://127.0.0.1:8830",
+      "sourceCommit": "9581c2e5f9b22b860606e8465a673452f5d91101",
       "sourceRepository": "AndyZhang666666/commute-compare",
-      "captureMethod": "Unedited current viewport screenshot, identical full and library-preview files; no compositing or model-generated mockup."
+      "captureMethod": "Unedited actual browser viewport screenshot; full and preview files identical. No compositing, model-generated mockup or invented business results."
     },
-    "sha256": "2fca858325cc7c9e786ee4db5121be9b11dfda133a92fe38b4907e25fe8227c2"
+    "sha256": "8772b87ec282fc9827cb602df9b5632a95ab5b8e4bb0b7addf4d49c75a3119e7"
   }
 ]

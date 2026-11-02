@@ -1,7 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { CommuteOption } from "@/lib/types";
-import { parseObservations, quickEstimate } from "@/lib/observations.js";
+import { quickEstimate } from "@/lib/observations.js";
+import { switchToEstimate,restoreRecords } from '@/lib/record-trial.js';
+import { DEFAULT_SETTINGS } from '@/lib/simulate.js';
+import type {GlobalSettings} from '@/lib/types';
+import RecordTrial from './RecordTrial';
 import OptionTable from "./OptionTable";
 import NumberField from "./NumberField";
 import { newOptionId } from "@/lib/presets.js";
@@ -11,14 +15,19 @@ export default function RouteInputs({
   onChange,
   suggested,
   calibration,
+  settings=DEFAULT_SETTINGS,
+  disabled=false,
 }: {
   options: CommuteOption[];
   onChange: (v: CommuteOption[]) => void;
   suggested: Record<string, number>;
   calibration?: {id:string;nonce:number};
+  settings?: GlobalSettings;
+  disabled?: boolean;
 }) {
   const [mode, setMode] = useState("quick");
-  useEffect(()=>{if(calibration){setMode("records");setTimeout(()=>document.getElementById("records-"+calibration.id)?.focus(),0);}},[calibration]);
+  const [confirmEstimate,setConfirmEstimate]=useState('');
+  useEffect(()=>{if(calibration){setMode("records");setTimeout(()=>document.getElementById("route-"+calibration.id)?.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'}),0);}},[calibration]);
   const add = () =>
     onChange([
       ...options,
@@ -36,28 +45,13 @@ export default function RouteInputs({
     onChange(options.map((o) => (o.id === id ? { ...o, ...patch } : o)));
   return (
     <>
-      <div className="input-modes" role="group" aria-label="录入方式">
-        {[
-          ["quick", "快速估算"],
-          ["records", "记录校准"],
-          ["advanced", "高级参数"],
-        ].map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            aria-pressed={mode === id}
-            onClick={() => setMode(id)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <div className="input-modes route-input-tools"><button type="button" className="btn" aria-pressed={mode==='quick'} onClick={()=>setMode('quick')}>路线输入</button><details><summary>记录与高级参数</summary><button type="button" className="text-action" onClick={()=>setMode('records')}>整理个人记录</button><button type="button" className="text-action" onClick={()=>setMode('advanced')}>三点参数与手动出门</button></details></div>
       <p className="note">
         {mode === "quick"
-          ? "只改常见耗时与费用即可开始。修改耗时会按公开比例生成三点假设，并替换该路线的旧记录；未修改的路线保留原数据。"
+          ? "先填常见耗时和单程费用。有记录的路线需明确改回估算后才能编辑耗时，原记录会保留。"
           : mode === "records"
             ? "粘贴同一方向、相近时段的门到门耗时。应用后直接从这些记录重采样，不用回忆“最慢可能多久”。"
-            : "修改三点参数会将该路线切回估算；出门时间可手动覆盖。"}
+            : "改三点参数前会确认切回估算并保留原记录；手动出门时间不影响记录来源。"}
       </p>
       {mode === "advanced" ? (
         <OptionTable
@@ -70,7 +64,7 @@ export default function RouteInputs({
         <>
           <div className="route-inputs">
             {options.map((o, i) => (
-              <section className="route-editor" key={o.id}>
+              <section className="route-editor" id={'route-'+o.id} key={o.id}>
                 <div className="route-title">
                   <label>
                     方案名称
@@ -101,6 +95,7 @@ export default function RouteInputs({
                         min={1}
                         max={200}
                         value={o.mode}
+                        disabled={!!o.observations?.length}
                         onCommit={(v) => {
                           update(o.id, {
                             ...quickEstimate(v),
@@ -124,14 +119,10 @@ export default function RouteInputs({
                     />
                   </label>
                 </div>
+                {!!o.observations?.length&&<div className="record-source-control">{confirmEstimate!==o.id?<button type="button" className="text-action" onClick={()=>setConfirmEstimate(o.id)}>改回估算，保留原记录</button>:<div role="group" aria-label={`${o.name}切回估算确认`}><p>将暂停使用这{o.observations.length}条记录，保留它们供恢复。三点估算尚未被个人记录验证。</p><button type="button" className="btn" onClick={()=>{onChange(options.map(v=>v.id===o.id?switchToEstimate(v):v));setConfirmEstimate('');}}>确认改回估算</button><button type="button" className="text-action" onClick={()=>setConfirmEstimate('')}>继续使用记录</button></div>}</div>}
+                {!o.observations?.length&&!!o.archivedObservations?.length&&<button type="button" className="text-action" onClick={()=>{if(o.trialRecords?.length&&!window.confirm(`恢复旧记录将替换当前积累的${o.trialRecords.length}条。继续恢复上次${o.archivedObservations?.length}条记录吗？`))return;onChange(options.map(v=>v.id===o.id?restoreRecords(v):v));}}>恢复上次{o.archivedObservations.length}条记录</button>}
                 {mode === "records" && (!calibration || calibration.id===o.id) && (
-                  <RecordEditor
-                    key={`${o.id}-${o.observations?.join(",") || ""}`}
-                    option={o}
-                    onApply={(values) =>
-                      update(o.id, { observations: values, source: "observed" })
-                    }
-                  />
+                  <><RecordTrial option={o} settings={settings} disabled={disabled} onApply={next=>onChange(options.map(v=>v.id===o.id?next:v))}/>{o.observations&&<details className="record-values"><summary>查看当前{o.observations.length}条记录</summary><p>{o.observations.join(', ')}</p></details>}</>
                 )}
                 <p className="source-note">
                   {o.observations?.length
@@ -152,55 +143,5 @@ export default function RouteInputs({
         </>
       )}
     </>
-  );
-}
-
-function RecordEditor({
-  option,
-  onApply,
-}: {
-  option: CommuteOption;
-  onApply: (v: number[]) => void;
-}) {
-  const [text, setText] = useState(option.observations?.join(", ") || "");
-  const [error, setError] = useState("");
-  const [applied, setApplied] = useState(false);
-  return (
-    <div className="record-editor">
-      <label>
-        实际单程耗时 / 分钟
-        <textarea
-          id={"records-"+option.id}
-          rows={2}
-          value={text}
-          aria-label={`${option.name}实际耗时记录`}
-          placeholder="例如：42, 46, 40, 55, 43（请填写自己的记录）"
-          onChange={(e) => {
-            setText(e.target.value);
-            setApplied(false);
-            setError("");
-          }}
-        />
-      </label>
-      <button
-        className="btn"
-        onClick={() => {
-          const p = parseObservations(text);
-          setError(p.error);
-          if (!p.error) {
-            onApply(p.values);
-            setApplied(true);
-          }
-        }}
-      >
-        应用这些记录
-      </button>
-      <span role="status">
-        {error ||
-          (applied
-            ? "已应用；结论会按新记录重新计算。"
-            : "逗号、空格或换行分隔，3–300 条；只填数字。")}
-      </span>
-    </div>
   );
 }

@@ -1,32 +1,22 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback } from "react";
-import type { CommuteOption, GlobalSettings } from "@/lib/types";
+import type { CommuteOption, GlobalSettings, PersonalConstraints } from "@/lib/types";
 import { DEFAULT_SETTINGS, simulate } from "@/lib/simulate.js";
 import {
   DEFAULT_PRESET_ID,
   getPreset,
   presetToOptions,
 } from "@/lib/presets.js";
-import { useComputed, useTabs } from "@/lib/hooks";
+import { useComputed } from "@/lib/hooks";
 import ComparePanel from "@/components/ComparePanel";
-import DeparturePanel from "@/components/DeparturePanel";
 import PresetsPanel from "@/components/PresetsPanel";
 import { decodeDraft } from "@/lib/draft.js";
+import { normalizeConstraints } from "@/lib/conditions.js";
 
 import {InputValidityContext} from "@/lib/input-validity";
 
-const TABS = [
-  { id: "compare", label: "方案对比" },
-  { id: "departure", label: "出门时间" },
-  { id: "presets", label: "预设与说明" },
-];
-
 export default function Page() {
-  const { tab, go } = useTabs(
-    "compare",
-    TABS.map((t) => t.id),
-  );
   const [inputDrafts,setInputDrafts]=useState<Record<string,boolean>>({});
   const reportInput=useCallback((id:string,dirty:boolean)=>setInputDrafts(old=>old[id]===dirty?old:{...old,[id]:dirty}),[]);
   const inputPending=Object.values(inputDrafts).some(Boolean);
@@ -39,6 +29,7 @@ export default function Page() {
   const [settings, setSettings] = useState<GlobalSettings>({
     ...DEFAULT_SETTINGS,
   });
+  const [constraints,setConstraints]=useState<PersonalConstraints>(()=>normalizeConstraints());
   const [storageReady, setStorageReady] = useState(false);
   const [storageNote, setStorageNote] = useState("");
   const [canSave, setCanSave] = useState(true);
@@ -49,6 +40,7 @@ export default function Page() {
         const d = decodeDraft(raw);
         setOptions(d.options);
         setSettings(d.settings);
+        setConstraints(normalizeConstraints(d.constraints));
         setPresetId("custom");
       }
     } catch {
@@ -61,7 +53,7 @@ export default function Page() {
   }, []);
   useEffect(() => {
     if (!storageReady || !canSave) return;
-    const raw = JSON.stringify({ options, settings });
+    const raw = JSON.stringify({ options, settings, constraints });
     try {
       decodeDraft(raw);
     } catch {
@@ -74,7 +66,7 @@ export default function Page() {
     } catch {
       setStorageNote("浏览器不允许保存草稿；关闭页面前可导出决策卡。");
     }
-  }, [options, settings, storageReady, canSave]);
+  }, [options, settings, constraints, storageReady, canSave]);
   const invalid = options.filter(
     (o) =>
       !o.name.trim() ||
@@ -101,8 +93,10 @@ export default function Page() {
       return;
     setPresetId(id);
     setOptions(presetToOptions(getPreset(id)));
-    go("compare");
+    document.getElementById('route-settings')?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
   };
+
+  useEffect(()=>{const id=location.hash.slice(1);if(['departure','presets'].includes(id)){const el=document.getElementById(id) as HTMLDetailsElement|null;if(el){el.open=true;el.scrollIntoView({block:'start'});}}},[]);
 
   const current = result;
 
@@ -113,22 +107,9 @@ export default function Page() {
           通勤方案比较器<span className="product-en">Commute Compare</span>
         </h1>
         <p className="sub">比较省下的时间、付出的费用，以及每天几点出门。</p>
-        <p className="meta">
-          先用常见耗时快速估算，再用自己的通勤记录校准。当前默认两条路线为杭州演示估计，不是实时交通数据。
-        </p>
+        <p className="meta">先比较两条路线，再把预算、出门习惯和真实记录放进同一次选择。默认数据为杭州演示估计。</p>
+        <div className="task-entry" aria-label="开始比较"><a className="btn primary" href="#personal-decision">先看演示比较</a><button className="btn" onClick={()=>{document.getElementById('route-settings')?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});document.querySelector<HTMLInputElement>('[aria-label="方案 1 名称"]')?.focus({preventScroll:true});}}>填写我的路线</button><a href="#presets">换一个城市案例</a></div>
       </header>
-
-      <nav className="tabbar">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            className={tab === t.id ? "active" : ""}
-            onClick={() => go(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </nav>
       <p className="source-note" role="status">
         {storageNote || "草稿与耗时记录仅存于本机浏览器，不上传。"}
       </p>
@@ -151,7 +132,6 @@ export default function Page() {
         </p>
       )}
 
-      {tab === "compare" && (
         <ComparePanel
           options={options}
           setOptions={(next) => {
@@ -160,25 +140,18 @@ export default function Page() {
           }}
           settings={settings}
           setSettings={setSettings}
+          constraints={constraints}
+          setConstraints={setConstraints}
           result={current}
           pending={!storageReady || inputPending || pending || invalid.length > 0}
         />
-      )}
-      {tab === "departure" && (
-        <DeparturePanel
-          result={current}
-          settings={settings}
-          setSettings={setSettings}
-          pending={!storageReady || inputPending || pending || invalid.length > 0}
-        />
-      )}
-      {tab === "presets" && (
+      <details className="support-details" id="presets"><summary>城市预设与模型说明</summary>
         <PresetsPanel
           activePresetId={presetId}
           onLoad={loadPreset}
           currentOptions={options}
         />
-      )}
+      </details>
 
       <footer style={{ marginTop: 26, fontSize: 12, color: "var(--muted)" }}>
         估算使用 PERT

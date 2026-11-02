@@ -10,7 +10,8 @@
     "preview": "node scripts/preview.mjs",
     "verify": "node scripts/verify.mjs",
     "verify-readme": "node scripts/verify-readme.mjs",
-    "check": "node scripts/verify.mjs && node scripts/verify-readme.mjs && node scripts/verify-experience.mjs && node --test scripts/test-boundaries.mjs scripts/test-decision.mjs"
+    "check": "node scripts/verify.mjs && node scripts/verify-readme.mjs && node scripts/verify-experience.mjs && node --test scripts/test-boundaries.mjs scripts/test-decision.mjs scripts/test-personal-route.mjs",
+    "test:personal": "node --test scripts/test-personal-route.mjs"
   },
   "dependencies": {
     "chart.js": "4.4.7",

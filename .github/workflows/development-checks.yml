@@ -1,7 +1,7 @@
 name: Development branch checks (no deployment)
 on:
   push:
-    branches: [feat/usable-four-20261030]
+    branches: [feat/usable-four-20261030, feat/product-depth-20261101]
   pull_request:
 permissions:
   contents: read
@@ -17,5 +17,5 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Core task and boundary checks (no API calls)
-        run: node --test scripts/test-boundaries.mjs scripts/test-decision.mjs
+        run: node --test scripts/test-boundaries.mjs scripts/test-decision.mjs scripts/test-personal-route.mjs
       - run: npm run build

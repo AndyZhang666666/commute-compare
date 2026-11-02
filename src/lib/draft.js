@@ -1,3 +1,4 @@
+import { normalizeConstraints } from './conditions.js';
 export function decodeDraft(raw) {
   const d = JSON.parse(raw);
   if (
@@ -46,6 +47,11 @@ export function decodeDraft(raw) {
         !o.observations.every((v) => Number.isFinite(v) && v >= 1 && v <= 360))
     )
       throw Error("记录无效");
+    for (const field of ['trialRecords', 'archivedObservations']) {
+      const records = o[field];
+      if (records !== undefined && (!Array.isArray(records) || records.length < (field === 'trialRecords' ? 1 : 3) || records.length > (field === 'trialRecords' ? 2 : 300) || !records.every(v => Number.isFinite(v) && v >= 1 && v <= 360))) throw Error('保留的个人记录无效');
+    }
+    if (o.recordRevision !== undefined && (!Number.isInteger(o.recordRevision) || o.recordRevision < 0)) throw Error('记录修订号无效');
     return {
       id: o.id,
       name: o.name,
@@ -55,6 +61,9 @@ export function decodeDraft(raw) {
       cost: o.cost,
       departureOverride: o.departureOverride ?? null,
       ...(o.observations ? { observations: o.observations } : {}),
+      ...(o.trialRecords ? { trialRecords: o.trialRecords } : {}),
+      ...(o.archivedObservations ? { archivedObservations: o.archivedObservations } : {}),
+      ...(o.recordRevision !== undefined ? { recordRevision: o.recordRevision } : {}),
       source: o.observations
         ? "observed"
         : ["preset", "quick", "estimate"].includes(o.source)
@@ -83,5 +92,6 @@ export function decodeDraft(raw) {
       daysPerMonth: s.daysPerMonth,
       lateTolerance: s.lateTolerance,
     },
+    ...(d.constraints ? { constraints: normalizeConstraints(d.constraints) } : {}),
   };
 }

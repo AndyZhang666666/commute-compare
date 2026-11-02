@@ -7,6 +7,7 @@ import type {
   CommuteOption,
   GlobalSettings,
   SimulationResult,
+  PersonalConstraints,
 } from "@/lib/types";
 import { fmtClock, parseClock } from "@/lib/simulate.js";
 import { championSummary } from "@/lib/insights.js";
@@ -16,6 +17,8 @@ import MetricsTable from "./MetricsTable";
 import ArrivalChart from "./ArrivalChart";
 import styles from "@/styles/Compare.module.css";
 import NumberField from "./NumberField";
+import PersonalConditions from './PersonalConditions';
+import DeparturePanel from './DeparturePanel';
 
 interface Props {
   options: CommuteOption[];
@@ -24,6 +27,8 @@ interface Props {
   setSettings: (s: GlobalSettings) => void;
   result: SimulationResult;
   pending: boolean;
+  constraints: PersonalConstraints;
+  setConstraints: (v:PersonalConstraints)=>void;
 }
 
 export default function ComparePanel({
@@ -33,6 +38,8 @@ export default function ComparePanel({
   setSettings,
   result,
   pending,
+  constraints,
+  setConstraints,
 }: Props) {
   const [calibration,setCalibration]=useState<{id:string;nonce:number}>();
   const reportInput=useContext(InputValidityContext);
@@ -59,7 +66,7 @@ export default function ComparePanel({
                 onChange={()=>reportInput("work-start",true)}
                 onBlur={(e) => {
                   const m = parseClock(e.target.value);
-                  if (!Number.isNaN(m)){setSettings({ ...settings, workStart: m });reportInput("work-start",false);}
+                  if (!Number.isNaN(m)){e.target.removeAttribute('aria-invalid');setSettings({ ...settings, workStart: m });reportInput("work-start",false);}
                   else {e.target.setAttribute("aria-invalid","true");reportInput("work-start",true);}
                 }}
                 onKeyDown={(e) => {
@@ -103,6 +110,7 @@ export default function ComparePanel({
               </div>
             </div></details>
           </div>
+          <PersonalConditions value={constraints} onChange={setConstraints}/>
         </div>
 
         <div className="panel">
@@ -112,11 +120,14 @@ export default function ComparePanel({
             onChange={setOptions}
             suggested={suggested}
             calibration={calibration}
+            settings={settings}
+            disabled={pending}
           />
         </div>
       </div>
 
-      <DecisionPanel options={options} settings={settings} result={result} pending={pending} onCalibrate={id=>{setCalibration({id,nonce:Date.now()});document.querySelector(".input-modes")?.scrollIntoView({block:"start",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}}/>
+      <div className="commute-output-column"><DecisionPanel options={options} settings={settings} constraints={constraints} result={result} pending={pending} onUpdateRoute={next=>setOptions(options.map(o=>o.id===next.id?next:o))} onCalibrate={id=>{setCalibration({id,nonce:Date.now()});document.getElementById('route-settings')?.scrollIntoView({block:"start",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}}/>
+      <details className="support-details" id="departure"><summary>细看建议出门时间与尾部阈值</summary><DeparturePanel result={result} settings={settings} setSettings={setSettings} pending={pending}/></details></div>
       </div>
       <details className="detail-comparison"><summary>详细图表与逐项比较</summary>
       <div className="result-grid" id="comparison-results" aria-busy={pending}>

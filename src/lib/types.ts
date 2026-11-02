@@ -12,6 +12,10 @@ export interface CommuteOption {
   cost: number;
   /** 实际门到门单程耗时；有记录时按经验分布重采样，不拟合三点估计。 */
   observations?: number[];
+  /** Fewer than three entries stay as a collection, not as a calibrated distribution. */
+  trialRecords?: number[];
+  archivedObservations?: number[];
+  recordRevision?: number;
   source?: "preset" | "quick" | "estimate" | "observed";
   /**
    * 手动指定的出门时刻（距 00:00 的分钟数）。
@@ -27,6 +31,11 @@ export interface GlobalSettings {
   daysPerMonth: number;
   /** 可接受的迟到概率，0.05 = 5% */
   lateTolerance: number;
+}
+
+export interface PersonalConstraints {
+  monthlyBudget: number | null;
+  earliestDeparture: number | null;
 }
 
 export interface SimulateOptions {
