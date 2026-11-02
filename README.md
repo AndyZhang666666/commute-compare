@@ -1,5 +1,8 @@
 # Commute Compare · 通勤方案比较器
 
+本轮新视觉尚未发布：[设计取舍、官方参考与前后截图](docs/VISUAL-CRAFT-20261102.md)。当前线上版本保留。
+
+
 [在线体验](https://andyzhang666666.github.io/commute-compare/) · [English](README.en.md) · [作品索引](https://github.com/AndyZhang666666/AndyZhang666666/blob/main/PROJECTS.md)
 
 平均更快的路线，是否也能让人更晚出门？
