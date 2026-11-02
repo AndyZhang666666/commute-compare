@@ -4,6 +4,8 @@
 
 Does the route with a lower average duration let you leave later?
 
+Approved release, 2026-11-02: Optional budget and earliest-departure constraints, trial-record previews and reconfirmed decisions now share one workspace. Model checks, a static build and integrated browser review are complete; this release ships with the portfolio. [Design and boundaries](docs/PERSONAL-ROUTE-20261101.md).
+
 ![Actual Commute Compare interface](docs/assets/commute-preview.jpg)
 
 ## Product decisions
