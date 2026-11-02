@@ -104,7 +104,7 @@ export default function Page() {
     <InputValidityContext.Provider value={reportInput}><div className="wrap">
       <header className="top">
         <h1>
-          通勤方案比较器<span className="product-en">Commute Compare</span>
+          <svg className="commute-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M7 5v9c0 6 18-2 18 5v8M7 5c0 8 18 4 18 12v10" fill="none" stroke="currentColor" strokeWidth="1.8"/><circle cx="7" cy="5" r="3" fill="var(--bg)" stroke="currentColor" strokeWidth="1.8"/><circle cx="25" cy="27" r="3" fill="var(--bg)" stroke="currentColor" strokeWidth="1.8"/></svg>通勤方案比较器<span className="product-en">Commute Compare</span>
         </h1>
         <p className="sub">比较省下的时间、付出的费用，以及每天几点出门。</p>
         <p className="meta">先比较两条路线，再把预算、出门习惯和真实记录放进同一次选择。默认数据为杭州演示估计。</p>

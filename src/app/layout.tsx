@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./workbench.css";
 import "./personal-route.css";
+import "./craft.css";
 
 export const metadata: Metadata = {
   title: "Commute Compare — 通勤方案比较器",
