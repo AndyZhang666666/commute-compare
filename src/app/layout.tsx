@@ -3,6 +3,8 @@ import "./globals.css";
 import "./workbench.css";
 import "./personal-route.css";
 import "./craft.css";
+import "./demo-help.css";
+import CommuteHelp from '@/components/CommuteHelp';
 
 export const metadata: Metadata = {
   title: "Commute Compare — 通勤方案比较器",
@@ -13,7 +15,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body><CommuteHelp/>{children}</body>
     </html>
   );
 }
