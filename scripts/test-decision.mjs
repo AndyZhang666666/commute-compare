@@ -1,5 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {simulate,DEFAULT_SETTINGS} from '../src/lib/simulate.js';import {makeDecision,decisionIsCurrent,compareTradeoff,decodeDecision,decisionSummary} from '../src/lib/decision.js';
 import {effectiveInputSource,inputSourceDescription} from '../src/lib/input-source.js';
+import {decisionChanges} from '../src/lib/decision-changes.js';
 const inputs=()=>[{id:'a',name:'地铁',min:30,mode:40,max:60,cost:5,source:'estimate'},{id:'b',name:'打车',min:20,mode:30,max:50,cost:30,source:'estimate'}];
 test('decision snapshot is independent, restores and becomes stale after edits',()=>{const options=inputs(),settings={...DEFAULT_SETTINGS},r=simulate(options,settings,{months:2000}),d=makeDecision(options,settings,r,'a','换乘少');assert.equal(decisionIsCurrent(d,options,settings,r.modelVersion),true);const recovered=decodeDecision(JSON.stringify(d));assert.equal(recovered.reason,'换乘少');options[0].cost=6;assert.equal(decisionIsCurrent(d,options,settings,r.modelVersion),false);assert.equal(d.options[0].cost,5);assert.match(decisionSummary(d),/地铁/);assert.throws(()=>makeDecision(options,settings,r,'missing'));});
 test('zero time advantage has no infinite value ratio; cheaper and slower have distinct states',()=>{const a={monthly:{cost:100,hoursP50:20}},same={monthly:{cost:200,hoursP50:20}},slower={monthly:{cost:200,hoursP50:21}},cheap={monthly:{cost:100,hoursP50:18}};assert.equal(compareTradeoff(a,same).pricePerHour,null);assert.equal(compareTradeoff(a,same).kind,'same-time');assert.equal(compareTradeoff(a,slower).kind,'slower');assert.equal(compareTradeoff(a,cheap).kind,'no-premium');assert.equal(compareTradeoff(a,{monthly:{cost:300,hoursP50:16}}).pricePerHour,50);});
@@ -23,4 +24,20 @@ test('source description uses raw-record median without changing or sorting stor
  assert.deepEqual(route.observations,[46,34,40,38]);
  assert.match(inputSourceDescription({...route,observations:undefined,archivedObservations:route.observations}),/三点估算/);
  assert.equal(effectiveInputSource({...route,observations:undefined}).count,0);
+});
+test('stale decision explains settings, costs and records without losing the saved reason',()=>{
+ const options=inputs(),settings={...DEFAULT_SETTINGS},r=simulate(options,settings,{months:2000});
+ const saved=makeDecision(options,settings,r,'b','先试行再决定',{monthlyBudget:1500});
+ const next=options.map(o=>o.id==='b'?{...o,cost:14,observations:[34,46,39],recordRevision:1,source:'observed'}:o);
+ const nextSettings={...settings,workStart:600,daysPerMonth:20};
+ const after=simulate(next,nextSettings,{months:2000});
+ const changes=decisionChanges(saved,next,nextSettings,{monthlyBudget:650,earliestDeparture:520},after);
+ assert.ok(changes.some(c=>c.label==='上班时间'&&c.before==='09:30'&&c.after==='10:00'));
+ assert.ok(changes.some(c=>c.label==='每月通勤天数'&&c.before==='22天'&&c.after==='20天'));
+ assert.ok(changes.some(c=>c.label==='月预算上限'&&c.before==='¥1500'&&c.after==='¥650'));
+ assert.ok(changes.some(c=>c.label==='打车有效耗时来源'&&c.after.includes('记录中位 39')));
+ assert.equal(saved.reason,'先试行再决定');
+ assert.equal(saved.options[1].cost,30);
+ assert.equal(decisionIsCurrent(saved,next,nextSettings,after.modelVersion,{monthlyBudget:650}),false);
+ assert.deepEqual(decisionChanges(saved,options,settings,{monthlyBudget:1500},r),[]);
 });
