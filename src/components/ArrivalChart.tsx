@@ -140,7 +140,7 @@ export default function ArrivalChart({ result }: Props) {
             beginAtZero: true,
             ticks: { display: false },
             grid: { color: "#f0eeea" },
-            title: { display: true, text: "概率密度", color: "#78736c", font: { size: 11 } },
+            title: { display: true, text: "模型相对频率", color: "#78736c", font: { size: 11 } },
           },
         },
         plugins: {
@@ -164,7 +164,7 @@ export default function ArrivalChart({ result }: Props) {
   return (
     <div>
       <div className={styles.chartBox}>
-        <canvas ref={canvasRef} />
+        <canvas ref={canvasRef} role="img" aria-label="当前输入下的到达时间分布；个人记录只展示已记录情况，不代表未来概率。数值见逐项比较。" />
       </div>
       <div className={styles.chartLegend}>
         {result.options.map((o, i) => (

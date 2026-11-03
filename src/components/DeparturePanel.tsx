@@ -1,15 +1,17 @@
 "use client";
 
-import type { GlobalSettings, SimulationResult } from "@/lib/types";
-import { fmtClock } from "@/lib/simulate.js";
+import type { GlobalSettings, SimulationResult, CommuteOption } from "@/lib/types";
+import { fmtClock,pickChampions } from "@/lib/simulate.js";
 import { departureInsight } from "@/lib/insights.js";
 import { fmtYuan } from "@/lib/hooks";
 import DepartureChart from "./DepartureChart";
 import styles from "@/styles/Compare.module.css";
 import NumberField from "./NumberField";
+import {routeEvidence} from "@/lib/evidence-view.js";
 
 interface Props {
   result: SimulationResult;
+  inputs: CommuteOption[];
   settings: GlobalSettings;
   setSettings: (s: GlobalSettings) => void;
   pending: boolean;
@@ -17,15 +19,19 @@ interface Props {
 
 export default function DeparturePanel({
   result,
+  inputs,
   settings,
   setSettings,
   pending,
 }: Props) {
-  const byId = (id: string) => result.options.find((o) => o.id === id);
-  const f = byId(result.champions.fastest);
-  const s = byId(result.champions.steadiest);
+  const excluded=result.options.filter(o=>{const input=inputs.find(v=>v.id===o.id);return !input||!routeEvidence(input,o,settings).timingKnown;});
+  const qualified=result.options.filter(o=>!excluded.some(v=>v.id===o.id));
+  const chartResult={...result,options:qualified,champions:pickChampions(qualified)};
+  const byId = (id: string) => qualified.find((o) => o.id === id);
+  const f = byId(chartResult.champions.fastest);
+  const s = byId(chartResult.champions.steadiest);
 
-  const rows = result.options.map((o) => ({
+  const rows = qualified.map((o) => ({
     o,
     delta: f ? o.suggestedDeparture - f.suggestedDeparture : 0,
   }));
@@ -33,7 +39,7 @@ export default function DeparturePanel({
   return (
     <div>
       <div className="panel">
-        <h2>出门时间与尾部阈值</h2>
+        <h2>出门时间与模型尾部阈值</h2>{excluded.map(o=><p key={o.id} className="source-note">{o.name}：{routeEvidence(inputs.find(v=>v.id===o.id)!,o,settings).timingNote} 不绘制目标阈值曲线；主区仍可比较记录范围与费用。</p>)}
         <label className="threshold-control">
           目标尾部阈值{" "}
           <NumberField
@@ -49,13 +55,14 @@ export default function DeparturePanel({
           %
         </label>
         <div className={pending ? "pending" : undefined}>
-          <DepartureChart
-            result={result}
+          {qualified.length>0&&<DepartureChart
+            result={chartResult}
             onToleranceChange={(v) =>
               setSettings({ ...settings, lateTolerance: v })
             }
-          />
+          />}
         </div>
+        <p className="note">只绘制能分辨当前尾部阈值的输入；达到记录数门槛不是未来可靠性认证。</p>
         <p className="note">
           按住红色横线上下拖动，松开后按 1%–20%
           的整百分点更新。也可用上方输入框。曲线与它的交点 =
@@ -102,7 +109,7 @@ export default function DeparturePanel({
 
         <div className="panel">
           <h2>结论</h2>
-          <div className="insight">{departureInsight(result)}</div>
+          <div className="insight">{qualified.length?<>仅在当前输入模型内：{departureInsight(chartResult)}</>:"暂无足够依据显示目标阈值出门时刻。继续积累相近时段的记录，先按主区的记录范围试行。"}</div>
           {f && s && (
             <>
               <h3>这两个方案差在哪</h3>

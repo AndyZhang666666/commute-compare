@@ -1,18 +1,21 @@
 "use client";
 
-import type { SimulationResult } from "@/lib/types";
+import type { SimulationResult,CommuteOption } from "@/lib/types";
 import { fmtClock } from "@/lib/simulate.js";
 import { fmtHours, fmtPct, fmtYuan } from "@/lib/hooks";
 import styles from "@/styles/Compare.module.css";
 import { championGroups } from "@/lib/insights.js";
+import {routeEvidence,evidenceClock} from '@/lib/evidence-view.js';
 
 interface Props {
   result: SimulationResult;
+  inputs: CommuteOption[];
 }
 
-export default function MetricsTable({ result }: Props) {
+export default function MetricsTable({ result,inputs }: Props) {
   const { champions, settings } = result;
   const groups = championGroups(result);
+  const limited=result.options.some(o=>{const input=inputs.find(v=>v.id===o.id);return input&&!routeEvidence(input,o,result.settings).timingKnown;});
   const names = (key: keyof typeof groups) =>
     groups[key].map((o) => o.name).join("、");
   const byId = (id: string) => result.options.find((o) => o.id === id);
@@ -36,6 +39,8 @@ export default function MetricsTable({ result }: Props) {
           </thead>
           <tbody>
             {result.options.map((o) => {
+              const input=inputs.find(v=>v.id===o.id);if(!input)return null;
+              const e=routeEvidence(input,o,result.settings);
               const manual = o.departure !== o.suggestedDeparture;
               const lateBad = o.lateProb > settings.lateTolerance + 1e-9;
               return (
@@ -47,7 +52,7 @@ export default function MetricsTable({ result }: Props) {
                         {groups.fastest.length > 1 ? "并列" : ""}最省时间
                       </span>
                     )}
-                    {groups.steadiest.some((v) => v.id === o.id) && (
+                    {!limited && groups.steadiest.some((v) => v.id === o.id) && (
                       <span className="tag steady">
                         {groups.steadiest.length > 1 ? "并列" : ""}最稳
                       </span>
@@ -61,18 +66,17 @@ export default function MetricsTable({ result }: Props) {
                   <td>
                     {fmtHours(o.monthly.hoursP50)}
                     <span className={styles.sub}>
-                      P10–P90 {fmtHours(o.monthly.hoursP10)}–
-                      {fmtHours(o.monthly.hoursP90)}
+                      {e.observed?'记录重采样 · 非未来预测':<>模型 P10–P90 {fmtHours(o.monthly.hoursP10)}–{fmtHours(o.monthly.hoursP90)}</>}
                     </span>
                   </td>
                   <td>{fmtYuan(o.monthly.cost)}</td>
                   <td
                     className={`${styles.late} ${lateBad ? styles.bad : styles.ok}`}
                   >
-                    {fmtPct(o.lateProb)}
+                    {e.timingKnown?fmtPct(o.lateProb):'暂无'}<span className={styles.sub}>{e.sourceLabel}{!e.timingKnown?' · 尾部依据不足':''}</span>
                   </td>
                   <td>
-                    {fmtClock(o.departure)}
+                    {manual?evidenceClock(o.departure):e.timingKnown?evidenceClock(o.departure):'仅供试行'}
                     {manual ? (
                       <span className={styles.manual}>手动</span>
                     ) : (
@@ -80,9 +84,9 @@ export default function MetricsTable({ result }: Props) {
                     )}
                   </td>
                   <td>
-                    {o.daily.spread.toFixed(0)} 分钟
+                    {(e.high-e.low).toFixed(0)} 分钟
                     <span className={styles.sub}>
-                      P10–P90 {o.daily.p10.toFixed(0)}–{o.daily.p90.toFixed(0)}
+                      {e.rangeLabel} {e.low.toFixed(0)}–{e.high.toFixed(0)}
                     </span>
                   </td>
                 </tr>
@@ -102,7 +106,7 @@ export default function MetricsTable({ result }: Props) {
             </div>
           </div>
         )}
-        {s && (
+        {s && !limited && (
           <div className={styles.champ}>
             <div className={styles.k}>最稳</div>
             <div className={styles.v}>{names("steadiest")}</div>

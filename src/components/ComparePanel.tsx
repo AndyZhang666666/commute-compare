@@ -19,6 +19,7 @@ import styles from "@/styles/Compare.module.css";
 import NumberField from "./NumberField";
 import PersonalConditions from './PersonalConditions';
 import DeparturePanel from './DeparturePanel';
+import {routeEvidence} from '@/lib/evidence-view.js';
 
 interface Props {
   options: CommuteOption[];
@@ -43,6 +44,7 @@ export default function ComparePanel({
 }: Props) {
   const [calibration,setCalibration]=useState<{id:string;nonce:number}>();
   const reportInput=useContext(InputValidityContext);
+  const limited=options.some(input=>{const m=result.options.find(v=>v.id===input.id);return m&&!routeEvidence(input,m,settings).timingKnown;});
   const suggested: Record<string, number> = {};
   for (const o of result.options) suggested[o.id] = o.suggestedDeparture;
 
@@ -127,7 +129,7 @@ export default function ComparePanel({
       </div>
 
       <div className="commute-output-column"><DecisionPanel options={options} settings={settings} constraints={constraints} result={result} pending={pending} onUpdateRoute={next=>setOptions(options.map(o=>o.id===next.id?next:o))} onCalibrate={id=>{setCalibration({id,nonce:Date.now()});document.getElementById('route-settings')?.scrollIntoView({block:"start",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}}/>
-      <details className="support-details" id="departure"><summary>细看建议出门时间与尾部阈值</summary><DeparturePanel result={result} settings={settings} setSettings={setSettings} pending={pending}/></details></div>
+      <details className="support-details" id="departure"><summary>细看建议出门时间与尾部阈值</summary><DeparturePanel inputs={options} result={result} settings={settings} setSettings={setSettings} pending={pending}/></details></div>
       </div>
       <details className="detail-comparison"><summary>详细图表与逐项比较</summary>
       <div className="result-grid" id="comparison-results" aria-busy={pending}>
@@ -137,8 +139,7 @@ export default function ComparePanel({
             <ArrivalChart result={result} />
           </div>
           <p className="note">
-            红线右边的面积就是迟到概率。曲线越靠左、越窄越好 ——
-            但这两件事经常不在同一个方案上。
+            红线右侧为当前模型样本中的迟到部分。个人记录图只重采样已发生的记录，不能外推未知天气或未来迟到概率。
           </p>
         </div>
 
@@ -150,10 +151,10 @@ export default function ComparePanel({
               : "已按当前输入更新。"}
           </p>
           <div className={pending ? "pending" : undefined}>
-            <MetricsTable result={result} />
+            <MetricsTable inputs={options} result={result} />
           </div>
           <div className="insight" style={{ marginTop: 14 }}>
-            {championSummary(result)}
+            {limited?'含尾部依据不足的路线：本次不比较“最稳”排名。时间与费用仍可核对，波动范围只描述已有记录或估算假设。':championSummary(result)}
           </div>
 
         </div>

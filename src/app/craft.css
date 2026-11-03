@@ -111,4 +111,6 @@ button:active:not(:disabled) { transform:translateY(1px); }
 .commute-input-column .panel:first-child { border-top:0; }
 /* Values change directly; only the small data marks fade, with no layout animation. */
 .time-range-band,.time-range-median { transition:opacity 150ms ease-out; }
+.time-range-row .range-source { font-size:11px; line-height:1.7; margin:10px 0 0; color:var(--muted); }
+.time-range-label { flex-wrap:wrap; gap:6px 16px; }
 @media(prefers-reduced-motion:reduce) { .time-range-band,.time-range-median { transition:none; } }

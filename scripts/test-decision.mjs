@@ -1,6 +1,8 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {simulate,DEFAULT_SETTINGS} from '../src/lib/simulate.js';import {makeDecision,decisionIsCurrent,compareTradeoff,decodeDecision,decisionSummary} from '../src/lib/decision.js';
 import {effectiveInputSource,inputSourceDescription} from '../src/lib/input-source.js';
 import {decisionChanges} from '../src/lib/decision-changes.js';
+import {routeEvidence,evidenceClock} from '../src/lib/evidence-view.js';
+import {constraintAssessment} from '../src/lib/conditions.js';
 const inputs=()=>[{id:'a',name:'地铁',min:30,mode:40,max:60,cost:5,source:'estimate'},{id:'b',name:'打车',min:20,mode:30,max:50,cost:30,source:'estimate'}];
 test('decision snapshot is independent, restores and becomes stale after edits',()=>{const options=inputs(),settings={...DEFAULT_SETTINGS},r=simulate(options,settings,{months:2000}),d=makeDecision(options,settings,r,'a','换乘少');assert.equal(decisionIsCurrent(d,options,settings,r.modelVersion),true);const recovered=decodeDecision(JSON.stringify(d));assert.equal(recovered.reason,'换乘少');options[0].cost=6;assert.equal(decisionIsCurrent(d,options,settings,r.modelVersion),false);assert.equal(d.options[0].cost,5);assert.match(decisionSummary(d),/地铁/);assert.throws(()=>makeDecision(options,settings,r,'missing'));});
 test('zero time advantage has no infinite value ratio; cheaper and slower have distinct states',()=>{const a={monthly:{cost:100,hoursP50:20}},same={monthly:{cost:200,hoursP50:20}},slower={monthly:{cost:200,hoursP50:21}},cheap={monthly:{cost:100,hoursP50:18}};assert.equal(compareTradeoff(a,same).pricePerHour,null);assert.equal(compareTradeoff(a,same).kind,'same-time');assert.equal(compareTradeoff(a,slower).kind,'slower');assert.equal(compareTradeoff(a,cheap).kind,'no-premium');assert.equal(compareTradeoff(a,{monthly:{cost:300,hoursP50:16}}).pricePerHour,50);});
@@ -40,4 +42,29 @@ test('stale decision explains settings, costs and records without losing the sav
  assert.equal(saved.options[1].cost,30);
  assert.equal(decisionIsCurrent(saved,next,nextSettings,after.modelVersion,{monthlyBudget:650}),false);
  assert.deepEqual(decisionChanges(saved,options,settings,{monthlyBudget:1500},r),[]);
+});
+test('three records describe an observed range and leave departure constraints unknown',()=>{
+ const options=inputs();options[1]={...options[1],observations:[34,46,39],source:'observed'};
+ const r=simulate(options,DEFAULT_SETTINGS,{months:2000}),metric=r.options[1],e=routeEvidence(options[1],metric,DEFAULT_SETTINGS);
+ assert.equal(e.median,39);assert.equal(e.low,34);assert.equal(e.high,46);
+ assert.equal(e.timingKnown,false);assert.equal(e.count,3);
+ const a=constraintAssessment(metric,{monthlyBudget:2000,earliestDeparture:510},options[1],DEFAULT_SETTINGS);
+ assert.equal(a.extraBudget,0);assert.equal(a.departureUnknown,true);assert.equal(a.meets,false);
+ const saved=makeDecision(options,DEFAULT_SETTINGS,r,'b','愿意接受未知，先试行',{earliestDeparture:510});
+ assert.equal(decisionIsCurrent(saved,options,DEFAULT_SETTINGS,r.modelVersion,{earliestDeparture:510}),true);
+ assert.match(decisionSummary(saved),/目标阈值出门时刻：暂无/);
+ assert.match(decisionSummary(saved),/出门条件暂无法验证/);
+ assert.doesNotMatch(decisionSummary(saved),/单程 P10–P90/);
+ const legacy={...saved};delete legacy.evidencePolicy;
+ assert.ok(decodeDecision(JSON.stringify(legacy)));
+ assert.equal(decisionIsCurrent(legacy,options,DEFAULT_SETTINGS,r.modelVersion,{earliestDeparture:510}),false);
+ assert.ok(decisionChanges(legacy,options,DEFAULT_SETTINGS,{earliestDeparture:510},r).some(c=>c.label==='出门条件的依据'));
+});
+test('record resolution is not reliability, and an invalid arrival cannot produce a threshold time',()=>{
+ const input={...inputs()[0],observations:Array(20).fill(40)},r=simulate([input],DEFAULT_SETTINGS,{months:2000});
+ const e=routeEvidence(input,r.options[0],DEFAULT_SETTINGS);
+ assert.equal(e.timingKnown,true);assert.match(e.timingNote,/不证明未来准点率/);
+ assert.equal(routeEvidence(input,r.options[0],{...DEFAULT_SETTINGS,workStart:NaN}).timingKnown,false);
+ assert.equal(evidenceClock(-10),'前一天 23:50');
+ assert.equal(e.rangeLabel,'已记录范围');
 });

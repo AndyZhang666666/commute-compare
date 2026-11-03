@@ -1,5 +1,6 @@
 import {normalizeConstraints} from './conditions.js';
 import {inputSourceDescription} from './input-source.js';
+import {routeEvidence,EVIDENCE_POLICY} from './evidence-view.js';
 
 const clock = n => n == null ? '未设置' : `${String(Math.floor(n / 60)).padStart(2,'0')}:${String(n % 60).padStart(2,'0')}`;
 const money = n => n == null ? '未设置' : `¥${n}`;
@@ -18,6 +19,9 @@ export function decisionChanges(saved, options, settings, constraints = {}, resu
   const a = normalizeConstraints(saved.constraints), b = normalizeConstraints(constraints);
   add('月预算上限', money(a.monthlyBudget), money(b.monthlyBudget));
   add('最早愿意出门', clock(a.earliestDeparture), clock(b.earliestDeparture));
+  if(result&&b.earliestDeparture!==null&&saved.evidencePolicy!==EVIDENCE_POLICY&&options.some(o=>{const m=result.options.find(v=>v.id===o.id);return m&&o.observations?.length&&!routeEvidence(o,m,settings).timingKnown;})) {
+    add('出门条件的依据', '旧版未单独确认少样本未知', '当前记录不足以验证尾部阈值，请确认是否先试行');
+  }
   for (const input of options) {
     const previous = saved.options.find(o => o.id === input.id);
     if (!previous) { add('新增路线', '未参与原比较', input.name); continue; }
