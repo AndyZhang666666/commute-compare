@@ -114,3 +114,9 @@ button:active:not(:disabled) { transform:translateY(1px); }
 .time-range-row .range-source { font-size:11px; line-height:1.7; margin:10px 0 0; color:var(--muted); }
 .time-range-label { flex-wrap:wrap; gap:6px 16px; }
 @media(prefers-reduced-motion:reduce) { .time-range-band,.time-range-median { transition:none; } }
+
+/* Near-equal time is the conclusion; the unstable ratio is supporting detail. */
+.trade-grid > div > small { display:block; }
+.trade-grid > div > small + small { margin-top:4px; }
+.trade-grid strong.trade-ratio-near { font-size:20px; line-height:1.65; letter-spacing:0; }
+.trade-grid .trade-ratio-value { color:var(--muted); font-variant-numeric:tabular-nums; }

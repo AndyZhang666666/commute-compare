@@ -45,4 +45,6 @@ test('tiny monthly differences use minutes without changing the raw time or rati
  const hours=.03555;assert.deepEqual(formatTimeDifference(hours),{value:'2.1',unit:'分钟'});assert.equal(isTinyDifference(hours),true);
  assert.deepEqual(formatTimeDifference(-hours),{value:'2.1',unit:'分钟'});assert.equal(isTinyDifference(0),false);
  assert.deepEqual(formatTimeDifference(1.25),{value:'1.3',unit:'小时'});assert.equal(hours,.03555);
+ assert.equal(isTinyDifference(5/60),true);assert.deepEqual(formatTimeDifference(5/60),{value:'5.0',unit:'分钟'});
+ assert.equal(isTinyDifference(5/60+.00001),false);
 });
