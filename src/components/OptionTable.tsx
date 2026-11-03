@@ -6,6 +6,7 @@ import { optionColor } from "@/lib/hooks";
 import styles from "@/styles/Compare.module.css";
 import NumberField from "./NumberField";
 import {switchToEstimate} from '@/lib/record-trial.js';
+import {inputSourceDescription} from '@/lib/input-source.js';
 
 interface Props {
   options: CommuteOption[];
@@ -50,6 +51,7 @@ export default function OptionTable({
 
   return (
     <div>
+      <p className="source-note">下表为三点估算参数；个人记录生效时，三点估算停用并保留供恢复。</p>
       <div className={styles.tableWrap}>
         <table className={styles.optTable}>
           <thead>
@@ -84,6 +86,7 @@ export default function OptionTable({
                       onChange={(e) => update(o.id, { name: e.target.value })}
                       aria-label="方案名称"
                     />
+                    {!!o.observations?.length && <p className="source-note">{inputSourceDescription(o)}</p>}
                   </td>
                   <td>
                     <NumberField

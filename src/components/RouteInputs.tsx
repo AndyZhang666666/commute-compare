@@ -9,6 +9,7 @@ import RecordTrial from './RecordTrial';
 import OptionTable from "./OptionTable";
 import NumberField from "./NumberField";
 import { newOptionId } from "@/lib/presets.js";
+import { effectiveInputSource, inputSourceDescription } from '@/lib/input-source.js';
 
 export default function RouteInputs({
   options,
@@ -89,12 +90,12 @@ export default function RouteInputs({
                 <div className="route-fields">
                   {mode === "quick" && (
                     <label>
-                      常见耗时 / 分钟
+                      {o.observations?.length ? '记录中位 / 分钟' : '常见耗时 / 分钟'}
                       <NumberField
-                        aria-label={`${o.name}常见耗时`}
+                        aria-label={`${o.name}${o.observations?.length ? '记录中位' : '常见耗时'}`}
                         min={1}
                         max={200}
-                        value={o.mode}
+                        value={effectiveInputSource(o).median ?? o.mode}
                         disabled={!!o.observations?.length}
                         onCommit={(v) => {
                           update(o.id, {
@@ -125,11 +126,8 @@ export default function RouteInputs({
                   <><RecordTrial option={o} settings={settings} disabled={disabled} onApply={next=>onChange(options.map(v=>v.id===o.id?next:v))}/>{o.observations&&<details className="record-values"><summary>查看当前{o.observations.length}条记录</summary><p>{o.observations.join(', ')}</p></details>}</>
                 )}
                 <p className="source-note">
-                  {o.observations?.length
-                    ? `实际记录 · ${o.observations.length} 次`
-                    : o.source === "quick"
-                      ? `快速估算 · ${o.min} / ${o.mode} / ${o.max} 分钟；最快按常见 ×0.8，最慢 ×1.8`
-                      : `三点估算 · ${o.min} / ${o.mode} / ${o.max} 分钟 · 非实测`}
+                  {inputSourceDescription(o)}
+                  {o.source === 'quick' && !o.observations?.length && '；最快按常见 ×0.8，最慢 ×1.8'}
                 </p>
               </section>
             ))}

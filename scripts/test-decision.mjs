@@ -1,5 +1,26 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {simulate,DEFAULT_SETTINGS} from '../src/lib/simulate.js';import {makeDecision,decisionIsCurrent,compareTradeoff,decodeDecision,decisionSummary} from '../src/lib/decision.js';
+import {effectiveInputSource,inputSourceDescription} from '../src/lib/input-source.js';
 const inputs=()=>[{id:'a',name:'地铁',min:30,mode:40,max:60,cost:5,source:'estimate'},{id:'b',name:'打车',min:20,mode:30,max:50,cost:30,source:'estimate'}];
 test('decision snapshot is independent, restores and becomes stale after edits',()=>{const options=inputs(),settings={...DEFAULT_SETTINGS},r=simulate(options,settings,{months:2000}),d=makeDecision(options,settings,r,'a','换乘少');assert.equal(decisionIsCurrent(d,options,settings,r.modelVersion),true);const recovered=decodeDecision(JSON.stringify(d));assert.equal(recovered.reason,'换乘少');options[0].cost=6;assert.equal(decisionIsCurrent(d,options,settings,r.modelVersion),false);assert.equal(d.options[0].cost,5);assert.match(decisionSummary(d),/地铁/);assert.throws(()=>makeDecision(options,settings,r,'missing'));});
 test('zero time advantage has no infinite value ratio; cheaper and slower have distinct states',()=>{const a={monthly:{cost:100,hoursP50:20}},same={monthly:{cost:200,hoursP50:20}},slower={monthly:{cost:200,hoursP50:21}},cheap={monthly:{cost:100,hoursP50:18}};assert.equal(compareTradeoff(a,same).pricePerHour,null);assert.equal(compareTradeoff(a,same).kind,'same-time');assert.equal(compareTradeoff(a,slower).kind,'slower');assert.equal(compareTradeoff(a,cheap).kind,'no-premium');assert.equal(compareTradeoff(a,{monthly:{cost:300,hoursP50:16}}).pricePerHour,50);});
 test('record calibration only affects the selected route and rejects corrupt decisions',()=>{const options=inputs(),before=JSON.stringify(options[1]),updated=options.map(o=>o.id==='a'?{...o,observations:[40,42,45],source:'observed'}:o);assert.equal(JSON.stringify(updated[1]),before);const r=simulate(updated,DEFAULT_SETTINGS,{months:2000}),d=makeDecision(updated,DEFAULT_SETTINGS,r,'a');assert.match(decisionSummary(d),/个人记录 3 次/);assert.throws(()=>decodeDecision(JSON.stringify({...d,inputKey:'altered'})));});
+test('active records appear in summary while old mode is explicitly archived',()=>{
+ const options=inputs();options[1]={...options[1],observations:[34,46,39],source:'observed'};
+ const before=JSON.stringify(options),r=simulate(options,DEFAULT_SETTINGS,{months:2000});
+ const d=makeDecision(options,DEFAULT_SETTINGS,r,'b','先试行');
+ const summary=decisionSummary(decodeDecision(JSON.stringify(d)));
+ assert.equal(r.options[1].daily.p50,39);
+ assert.match(summary,/记录中位 39 分钟 · 已记录范围 34–46 分钟/);
+ assert.match(summary,/旧三点估算 20 \/ 30 \/ 50 分钟已停用，仅供恢复/);
+ assert.doesNotMatch(summary,/输入：常见30分钟/);
+ assert.equal(JSON.stringify(options),before);
+ assert.equal(d.options[1].mode,30);
+ assert.match(summary,/三点估算 30 \/ 40 \/ 60 分钟/);
+});
+test('source description uses raw-record median without changing or sorting stored records',()=>{
+ const route={...inputs()[0],observations:[46,34,40,38]};
+ assert.deepEqual(effectiveInputSource(route),{kind:'observed',count:4,median:39,min:34,max:46,archivedEstimate:{min:30,mode:40,max:60,active:false}});
+ assert.deepEqual(route.observations,[46,34,40,38]);
+ assert.match(inputSourceDescription({...route,observations:undefined,archivedObservations:route.observations}),/三点估算/);
+ assert.equal(effectiveInputSource({...route,observations:undefined}).count,0);
+});

@@ -1,5 +1,6 @@
 import {decodeDraft} from './draft.js';
 import {normalizeConstraints,constraintAssessment} from './conditions.js';
+import {inputSourceDescription} from './input-source.js';
 export const DECISION_KEY='commute:decision:v1';
 export function inputSignature(options,settings,constraints={}){const c=normalizeConstraints(constraints),active=c.monthlyBudget!==null||c.earliestDeparture!==null;const d=decodeDraft(JSON.stringify({options,settings,...(active?{constraints:c}:{})}));return JSON.stringify(d);}
 export {compareTradeoff} from "./tradeoff.js";
@@ -23,12 +24,12 @@ export function decisionSummary(d){
  const selected=d.result.options.find(o=>o.id===d.selectedId),input=d.options.find(o=>o.id===d.selectedId);
  const constraints=normalizeConstraints(d.constraints),assessment=constraintAssessment(selected,constraints),clock=n=>`${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;
  return ['我的通勤决策卡',`保存时间：${d.savedAt}`,`选择：${selected.name}`,`理由：${d.reason||'未填写'}`,
-  `来源：${input.observations?.length?'个人记录 '+input.observations.length+' 次':'估算输入，非实测'}`,
+  `来源：${inputSourceDescription(input)}`,
   `月度往返：${selected.monthly.hoursP50.toFixed(1)}小时（中位） / ¥${selected.monthly.cost.toFixed(2)}`,
   `单程 P10–P90：${selected.daily.p10.toFixed(1)}–${selected.daily.p90.toFixed(1)}分钟（模型内范围）`,
   `上班时间：${String(Math.floor(d.settings.workStart/60)).padStart(2,'0')}:${String(d.settings.workStart%60).padStart(2,'0')}；每月 ${d.settings.daysPerMonth} 天`,
   `个人条件：月预算${constraints.monthlyBudget===null?'未设置':`¥${constraints.monthlyBudget.toFixed(2)}`}；最早愿意出门${constraints.earliestDeparture===null?'未设置':clock(constraints.earliestDeparture)}`,
   assessment.hasConstraints?(assessment.meets?'所选路线满足当前已设置的条件。':`所选路线的条件差：预算需增加¥${assessment.extraBudget.toFixed(2)}；出门需提前${assessment.earlierMinutes}分钟。为0的项目无需放宽。`):'未设置个人条件，由本人权衡。',
-  '对比快照：',...d.result.options.map(o=>`- ${o.name}：月中位${o.monthly.hoursP50.toFixed(1)}小时，月费¥${o.monthly.cost.toFixed(2)}；输入：常见${d.options.find(x=>x.id===o.id).mode}分钟 / 单程¥${d.options.find(x=>x.id===o.id).cost}`),
+  '对比快照：',...d.result.options.map(o=>{const source=d.options.find(x=>x.id===o.id);return `- ${o.name}：月中位${o.monthly.hoursP50.toFixed(1)}小时，月费¥${o.monthly.cost.toFixed(2)}；输入：${inputSourceDescription(source)} / 单程¥${source.cost}`;}),
   `模型：${d.modelVersion}`,'估算或个人记录条件下的情景比较；月度按往返、返程同分布，不保证未来准点率。输入改变后须重新确认。'].join('\n');
 }
