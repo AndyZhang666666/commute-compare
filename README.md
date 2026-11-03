@@ -1,5 +1,7 @@
 # Commute Compare · 通勤方案比较器
 
+2026-11-03: 页面和导出使用同一有效记录来源，条件变化需重新确认；小分母显示更克制，未应用记录和理由可恢复。 [Release scope and verification](docs/RELEASE-20261103.md).
+
 2026-11-03 最后细节版已在本地验证，计算与状态约定保持，未发布。[修改及验证](docs/FINAL-DETAIL-20261103.md)。
 
 本轮独立任务复验已完成，首轮失败项已修复；仍只在本地，未推送或上线。详见 [独立验收与未测边界](docs/INDEPENDENT-REVIEW-20261103.md)。
