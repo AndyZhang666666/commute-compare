@@ -20,3 +20,5 @@
 .decision-changes dd>span:first-child { color:var(--muted); }
 .decision-changes p { font-size:12px; line-height:1.8; }
 @media(max-width:600px) { .decision-changes dl>div { grid-template-columns:1fr; gap:2px; } }
+
+.decision-export-receipt{font-size:12px;line-height:1.9;padding:14px 0;border-top:1px solid var(--border,#ddd)}.decision-export-receipt a{display:inline-block;min-height:44px;padding:8px 12px;color:var(--accent,#326079);text-decoration:underline;text-underline-offset:4px}.decision-export-receipt span{display:block;color:var(--muted,#666)}

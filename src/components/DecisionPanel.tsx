@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import type {CommuteOption,GlobalSettings,SimulationResult,PersonalConstraints} from '@/lib/types';
 import {DECISION_KEY,compareTradeoff,makeDecision,decodeDecision,decisionIsCurrent,decisionSummary} from '@/lib/decision.js';
 import {routeEvidence,evidenceClock} from '@/lib/evidence-view.js';
@@ -10,6 +10,9 @@ import {effectiveInputSource,inputSourceDescription} from '@/lib/input-source.js
 import {decisionChanges} from '@/lib/decision-changes.js';
 type Snapshot=ReturnType<typeof makeDecision>;
 export default function DecisionPanel({options,settings,constraints,result,pending,onCalibrate,onUpdateRoute}:{options:CommuteOption[];settings:GlobalSettings;constraints:PersonalConstraints;result:SimulationResult;pending:boolean;onCalibrate:(id:string)=>void;onUpdateRoute:(v:CommuteOption)=>void}){
+ const exportUrl=useRef<string|null>(null);
+ const [file,setFile]=useState<{url:string;savedAt:string}|null>(null);
+ useEffect(()=>()=>{if(exportUrl.current)URL.revokeObjectURL(exportUrl.current);},[]);
  const [decision,setDecision]=useState<Snapshot|null>(null),[reason,setReason]=useState(''),[notice,setNotice]=useState(''),[ready,setReady]=useState(false),[pair,setPair]=useState('');
  useEffect(()=>{try{const saved=decodeDecision(localStorage.getItem(DECISION_KEY));if(saved){setDecision(saved);setReason(saved.reason);}}catch{setNotice('保存的决策卡无法读取；旧内容未被覆盖，仍可重新选择和导出。');}setReady(true);},[]);
  const reasonPending=!!decision&&reason.trim()!==decision.reason;
@@ -18,7 +21,7 @@ export default function DecisionPanel({options,settings,constraints,result,pendi
  const assessments=result.options.map(o=>constraintAssessment(o,constraints,options.find(v=>v.id===o.id),settings)),hasConditions=assessments.some(a=>a.hasConstraints),feasible=assessments.filter(a=>a.meets).length,unknown=assessments.filter(a=>a.departureUnknown).length;
  const other=result.options.find(o=>o.id===pair&&o.id!==cheap?.id)||result.options.find(o=>o.id!==cheap?.id),trade=cheap&&other?compareTradeoff(cheap,other):null;
  function choose(id:string){if(pending)return;try{const d=makeDecision(options,settings,result,id,reason.trim(),constraints);setDecision(d);try{localStorage.setItem(DECISION_KEY,JSON.stringify(d));setNotice('已保存本次选择与个人条件；输入或记录改变后会要求重新确认。');}catch{setNotice('本机保存不可用，选择暂留本页，可立即复制摘要或导出 JSON。');}}catch(e){setNotice((e as Error).message);}}
- function download(){if(!decision||!current||pending||reasonPending)return;const url=URL.createObjectURL(new Blob([JSON.stringify({...decision,inputSources:decision.options.map((o:CommuteOption)=>({id:o.id,...effectiveInputSource(o),description:inputSourceDescription(o),evidence:routeEvidence(o,decision.result.options.find((v:{id:string})=>v.id===o.id),decision.settings)})),summary:decisionSummary(decision)},null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='commute-decision.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+ function download(){if(!decision||!current||pending||reasonPending)return;const url=URL.createObjectURL(new Blob([JSON.stringify({...decision,inputSources:decision.options.map((o:CommuteOption)=>({id:o.id,...effectiveInputSource(o),description:inputSourceDescription(o),evidence:routeEvidence(o,decision.result.options.find((v:{id:string})=>v.id===o.id),decision.settings)})),summary:decisionSummary(decision)},null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='commute-decision.json';a.click();if(exportUrl.current)URL.revokeObjectURL(exportUrl.current);exportUrl.current=url;setFile({url,savedAt:decision.savedAt});}
  return <section className="panel personal-decision" id="personal-decision" aria-busy={pending}>
  <div className="decision-head"><div><h2>每月多付多少，换回多少时间？</h2></div><span className="source-chip">模型内比较</span></div>
  <TimeRanges options={result.options} inputs={options} settings={settings} pending={pending}/>
@@ -47,5 +50,6 @@ export default function DecisionPanel({options,settings,constraints,result,pendi
  <label className="decision-reason">选择理由（可选，保存到决策卡）<textarea rows={2} maxLength={600} value={reason} onChange={e=>setReason(e.target.value)} placeholder="例如：多花一点，换来不必连续换乘的早晨。"/></label>
  {decision&&reason.trim()!==decision.reason&&<p className="source-note">理由尚未保存，点击路线的“选择 / 再次确认”更新决策卡。</p>}
  <div className="decision-footer"><p><strong>{decision?(current?`当前选择：${decision.result.options.find((o:{id:string})=>o.id===decision.selectedId)?.name}`:'待重新确认：保留了旧输入下的选择快照'):'尚未选择'}</strong>{decision&&!current&&<span className="source-note">旧选择：{decision.result.options.find((o:{id:string})=>o.id===decision.selectedId)?.name} · {decision.savedAt.slice(0,10)}。旧快照不作为当前结果导出。</span>}</p><div className="decision-actions"><button className="btn" disabled={!decision||!current||pending||reasonPending} onClick={async()=>{try{await navigator.clipboard.writeText(decisionSummary(decision));setNotice('当前决策卡摘要已复制。');}catch{setNotice('复制不可用，请导出 JSON。');}}}>复制选择摘要</button><button className="btn" disabled={!decision||!current||pending||reasonPending} onClick={download}>导出决策 JSON</button></div></div>
+ {file&&decision&&file.savedAt===decision.savedAt&&current&&!pending&&!reasonPending&&<p className="decision-export-receipt" role="status">文件已生成，浏览器未自动保存时可再次下载。<a href={file.url} download="commute-decision.json">保存 commute-decision.json</a><span>对应本次已确认快照；条件变化后须重新确认并生成。</span></p>}
  </section>;
 }
