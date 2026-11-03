@@ -38,3 +38,11 @@ test('personal constraints and record revisions invalidate decisions without cha
  assert.match(decisionSummary(d),/月预算¥300.00/);assert.deepEqual(decodeDecision(JSON.stringify(d)),d);const updated=[recordUpdate(options[0],'45').next,options[1]];assert.equal(decisionIsCurrent(d,updated,DEFAULT_SETTINGS,r.modelVersion,c),false);
  const legacy={...makeDecision(options,DEFAULT_SETTINGS,r,'a'),version:1};delete legacy.constraints;assert.equal(decisionIsCurrent(decodeDecision(JSON.stringify(legacy)),options,DEFAULT_SETTINGS,r.modelVersion),true);
 });
+
+
+import {formatTimeDifference,isTinyDifference} from '../src/lib/time-difference.js';
+test('tiny monthly differences use minutes without changing the raw time or ratio',()=>{
+ const hours=.03555;assert.deepEqual(formatTimeDifference(hours),{value:'2.1',unit:'分钟'});assert.equal(isTinyDifference(hours),true);
+ assert.deepEqual(formatTimeDifference(-hours),{value:'2.1',unit:'分钟'});assert.equal(isTinyDifference(0),false);
+ assert.deepEqual(formatTimeDifference(1.25),{value:'1.3',unit:'小时'});assert.equal(hours,.03555);
+});

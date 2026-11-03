@@ -1,5 +1,7 @@
 # Commute Compare
 
+2026-11-03 local review fixes: sibling tools open in new tabs; unfinished text is restored separately from confirmed results. No push, merge or publication. [Behavior and checks](docs/DRAFT-RECOVERY-20261103.md).
+
 2026-11-03 · 本地迭代 / local only, not published: Active record medians, ranges, N and archived estimates agree across UI, summary and JSON. Changed conditions require reconfirmation, with sparse-tail uncertainty retained. A download recovery link belongs to one confirmed snapshot and disappears when it is stale. Tests (19), type checks and build passed; the actual JSON file contains median 39, N=3 and no justified target-tail departure time. [验收记录](docs/TASK-CLARITY-20261103.md)。
 
 Visual refresh approved after user review, 2026-11-02: [design, references and before/after screenshots](docs/VISUAL-CRAFT-20261102.md). Existing product behavior is preserved; the merge commit and Pages workflow record publication.
